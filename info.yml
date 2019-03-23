@@ -1,0 +1,104 @@
+# Copyright (c) 2013 Shotgun Software Inc.
+#
+# CONFIDENTIAL AND PROPRIETARY
+#
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
+# Source Code License included in this distribution package. See LICENSE.
+# By accessing, using, copying or modifying this work you indicate your
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
+# not expressly granted therein are reserved by Shotgun Software Inc.
+
+# Metadata defining the behaviour and requirements for this engine
+
+
+# __author__ = "Diego Garcia Huerta"
+# __contact__ = "https://www.linkedin.com/in/diegogh/"
+
+
+# expected fields in the configuration file for this engine
+configuration:
+
+    automatic_context_switch:
+        type: bool
+        description: "Controls whether toolkit should attempt to automatically adjust its
+                     context every time the currently loaded file changes. Defaults to True."
+        default_value: True
+
+    compatibility_dialog_min_version:
+        type: int
+        description: "Specify the minimum Application major version that will prompt a warning if
+                     it isn't yet fully supported and tested with Toolkit.  To disable the warning
+                     dialog for the version you are testing, it is recomended that you set this
+                     value to the current major version + 1."
+        default_value: 3
+
+    debug_logging: 
+        type: bool
+        description: Controls whether debug messages should be emitted to the logger
+        default_value: false
+
+    menu_favourites:
+        type: list
+        description: "Controls the favourites section on the main menu. This is a list
+                     and each menu item is a dictionary with keys app_instance and name.
+                     The app_instance parameter connects this entry to a particular
+                     app instance defined in the environment configuration file. The name
+                     is a menu name to make a favourite."
+        allows_empty: True
+        values:
+            type: dict
+            items:
+                name: { type: str }
+                app_instance: { type: str }
+
+    run_at_startup:
+        type: list
+        description: "Controls what apps will run on startup.  This is a list where each element
+                     is a dictionary with two keys: 'app_instance' and 'name'.  The app_instance
+                     value connects this entry to a particular app instance defined in the
+                     environment configuration file.  The name is the menu name of the command
+                     to run when the Substance Painter engine starts up.  If name is '' then all commands from the
+                     given app instance are started."
+        allows_empty: True
+        default_value: []
+        values:
+            type: dict
+            items:
+                name: { type: str }
+                app_instance: { type: str }
+
+    template_project:
+        type: template
+        description: "Template to use to determine where to set the substancepainter project location.
+                     This should be a string specifying the template to use but can also be
+                     empty if you do not wish the Substance Painter project to be automatically set."
+        allows_empty: True
+
+    use_sgtk_as_menu_name:
+        type: bool
+        description: Optionally choose to use 'Sgtk' as the primary menu name instead of 'Shotgun'
+        default_value: false
+
+    launch_builtin_plugins:
+        type: list
+        description: Comma-separated list of tk-substancepainter plugins to load when launching Substance Painter. Use
+                     of this feature disables the classic mechanism for bootstrapping Toolkit
+                     when Substance Painter is launched.
+        allows_empty: True
+        default_value: []
+        values:
+            type: str
+
+# the Shotgun fields that this engine needs in order to operate correctly
+requires_shotgun_fields:
+        
+# More verbose description of this item 
+display_name: "Shotgun Engine for Substance Painter"
+description: "Shotgun Integration for Substance Painter"
+
+# Required minimum versions for this item to run
+requires_shotgun_version:
+requires_core_version: "v0.18.8"
+
+frameworks:
+    - {"name": "tk-framework-unrealqt", "version": "v1.x.x"}
