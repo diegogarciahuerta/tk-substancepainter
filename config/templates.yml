@@ -1,0 +1,52 @@
+# Copyright (c) 2015 Shotgun Software Inc.
+#
+# CONFIDENTIAL AND PROPRIETARY
+#
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
+# Source Code License included in this distribution package. See LICENSE.
+# By accessing, using, copying or modifying this work you indicate your
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
+# not expressly granted therein are reserved by Shotgun Software Inc.
+
+# Author: Diego Garcia Huerta
+# Contact: https://www.linkedin.com/in/diegogh/
+#
+# YOU SHOULD MERGE these entries into your template.yml configuration file, as
+# THIS FILE BY ITSELF WILL NOT WORK 
+# These are the additions to the template.yml to get natron engine up and 
+# running with the default tk-apps
+
+paths:
+    #
+    # Substance Painter
+    #
+
+    # asset
+    # define the location of a work area
+    asset_work_area_substancepainter:
+        definition: '@asset_root/work/substancepainter'
+        root_name: 'primary'
+    # define the location of a publish area
+    asset_publish_area_substancepainter:
+        definition: '@asset_root/publish/substancepainter'
+        root_name: 'primary'
+
+    # The location of WIP files
+    substancepainter_asset_work:
+        definition: '@asset_root/work/substancepainter/{name}.v{version}.spp'
+        root_name: 'primary'
+    # The location of backups of WIP files
+    substancepainter_asset_snapshot:
+        definition: '@asset_root/work/substancepainter/snapshots/{name}.v{version}.{timestamp}.spp'
+        root_name: 'primary'
+    # The location of published clarisse files
+    substancepainter_asset_publish:
+        definition: '@asset_root/publish/substancepainter/{name}.v{version}.spp'
+        root_name: 'primary'
+ 
+ 
+    # a texture folder publish
+    substancepainter_asset_textures_path_publish:
+        definition: '@asset_publish_area_substancepainter/textures/{Asset}_textures_v{version}'
+        root_name: 'primary'
+ 

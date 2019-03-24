@@ -240,6 +240,18 @@ class EngineClient(Client):
         result = self.send_and_receive("IMPORT_PROJECT_RESOURCE", path=filename, usage=usage, destination=destination)
         return result
 
+    def get_project_settings(self, key):
+        result = self.send_and_receive("GET_PROJECT_SETTINGS", key=key)
+        return result
+
+    def get_resource_info(self, resource_url):
+        result = self.send_and_receive("GET_RESOURCE_INFO", url=resource_url)
+        return result
+
+    def get_project_export_path(self):
+        result = self.send_and_receive("GET_PROJECT_EXPORT_PATH")
+        return result
+
     def log_info(self, message):
         self.send_text_message("LOG_INFO", message=message)
 

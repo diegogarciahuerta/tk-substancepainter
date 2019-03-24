@@ -8,8 +8,8 @@
 # agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
-import glob
 import os
+
 import sgtk
 
 
@@ -79,6 +79,38 @@ class SubstancePainterSessionCollector(HookBaseClass):
 
         # create an item representing the current substance painter session
         item = self.collect_current_substancepainter_session(settings, parent_item)
+
+        if item:
+            resource_items = self.collect_current_substancepainter_exports(settings, item)
+
+    def collect_current_substancepainter_exports(self, settings, parent_item):
+        publisher = self.parent
+        engine = sgtk.platform.current_engine()
+        engine.log_debug("Collecting exported textures...")
+        export_path = engine.app.get_project_export_path()
+
+        engine.log_debug("export_path: %s" % export_path)
+
+        if export_path:
+            textures = os.listdir(export_path)
+            if textures:
+                engine.log_debug("textures: %s" % textures)
+                textures_item = parent_item.create_item(
+                    "substancepainter.textures",
+                    "Textures",
+                    "Substance Painter Textures"
+                )                
+                icon_path = os.path.join(
+                    self.disk_location,
+                    os.pardir,
+                    "icons",
+                    "texture.png"
+                )
+                textures_item.set_icon_from_path(icon_path)
+
+                textures_item.properties["path"] = export_path
+                textures_item.properties["publish_type"] = "Substance Painter Textures Folder"
+
 
     def collect_current_substancepainter_session(self, settings, parent_item):
         """

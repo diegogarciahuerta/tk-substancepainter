@@ -58,16 +58,6 @@ PainterPlugin {
     {
       bootstrapEngine();
     }
-
-
-// source.grabToImage(function(result) {
-//                         log_debug("screen captured");
-//                        result.saveToFile("c:/temp/temp.png");
-//                    }, Qt.size(128, 128));
-
-    // default value settings
-    //alg.ui.addWidgetToPluginToolBar("menu.qml");
-    log_debug("onCompleted. Done")
   }
 
   onApplicationStarted: {
@@ -183,28 +173,6 @@ PainterPlugin {
     // update the engine with the current project loaded
     server.sendCommand("PROJECT_OPENED", {path:currentProjectPath()});
   }
-
-
-  // function createProject(data) {
-  //   log_debug("createProject called with params:" + data)
-
-  //   if (alg.project.isOpen()) {
-  //     // TODO: Ask the user if he wants to save its current opened project
-  //     alg.project.close();
-  //   }
-  //   alg.project.create(root.liveLinkConfig.project.meshUrl, null, root.liveLinkConfig.project.template, {
-  //     normalMapFormat: root.liveLinkConfig.project.normal
-  //   });
-
-  //   // HACK: Painter is not synchronous when creating a project
-  //   setTimeout(function(projectUrl) {
-  //     return function() {
-  //       initSynchronization();
-  //       alg.project.save(projectUrl);
-  //     };
-  //   }(data.project.url), root.initDelayOnProjectCreation);
-  // }
-
 
   function cleanUrl(url) {
     return alg.fileIO.localFileToUrl(alg.fileIO.urlToLocalFile(url));
@@ -352,7 +320,7 @@ PainterPlugin {
   }
 
   function info(data){
-    return StandardPaths.standardLocations(StandardPaths.AppLocalDataLocation)[0]
+    return alg.settings.keys(); //StandardPaths.standardLocations(StandardPaths.AppLocalDataLocation)[0]
   }
 
   function extractThumbnail(data)
@@ -363,7 +331,18 @@ PainterPlugin {
   function importProjectResource(data)
   {
     try {
-      return alg.resources.importProjectResource(data.path, [data.usage], data.destination);
+      var result = alg.resources.importProjectResource(data.path, [data.usage], data.destination);
+      
+      // we store the info as a project settings as it will be reused later 
+      // when tk-multi-breakdown tries to figure out what resources are
+      // up to date and which are not.
+
+      var settings = alg.project.settings.value("tk-multi-loader2", {});    
+      settings[result] = data.path;
+
+      alg.project.settings.setValue("tk-multi-loader2", settings);
+
+      return settings;
     }
     catch (err) {
       alg.log.exception(err)
@@ -371,10 +350,29 @@ PainterPlugin {
     return null;
   }
 
+  function getProjectSettings(data)
+  {
+    return alg.project.settings.value(data.key, {});
+  }
+
+  function getResourceInfo(data)
+  {
+    try {
+      return alg.resources.getResourceInfo(data.url);
+    }
+    catch (err) {
+      alg.log.exception(err)
+    }
+    return null;
+  }
+
+  function getProjectExportPath(data)
+  {
+    return alg.mapexport.exportPath();
+  }
+
   function saveProjectAsAction(data)
   {
-    // pass hte current path as default
-    saveSessionDialog.selectFile(alg.project.url());
     return saveSessionDialog.open();
   }
 
@@ -384,9 +382,7 @@ PainterPlugin {
       registerCallback("SEND_PROJECT_INFO", sendProjectInfo);
       registerCallback("GET_VERSION", getVersion);
       registerCallback("ENGINE_READY", engineReady);
-      //checkConnectionTimer.start();
       registerCallback("OPEN_PROJECT", openProject);
-      // registerCallback("CREATE_PROJECT", createProject);
       registerCallback("GET_CURRENT_PROJECT_PATH", currentProjectPath);
       registerCallback("SAVE_PROJECT", saveProject);
       registerCallback("SAVE_PROJECT_AS", saveProjectAs);
@@ -396,9 +392,12 @@ PainterPlugin {
       registerCallback("EXECUTE_STATEMENT", executeStatement);
       registerCallback("EXTRACT_THUMBNAIL", extractThumbnail);
       registerCallback("IMPORT_PROJECT_RESOURCE", importProjectResource);
-      registerCallback("INFO", info);
+      registerCallback("GET_PROJECT_SETTINGS", getProjectSettings);
+      registerCallback("GET_RESOURCE_INFO", getResourceInfo);
+      registerCallback("GET_PROJECT_EXPORT_PATH", getProjectExportPath);
 
-      //registerCallback("SEND_PROJECT_INFO", sendProjectInfo);
+      registerCallback("INFO", info);
+      //checkConnectionTimer.start();
     }
 
     onConnectedChanged: {
@@ -415,7 +414,7 @@ PainterPlugin {
     nameFilters: [ "Substance Painter files (*.spp)" ]
 
     onAccepted: {
-      var url = fileUrl.toString()
+      var url = fileUrl.toString();
       alg.project.save(url, alg.project.SaveMode.Full);
       return true;
     }
@@ -425,79 +424,3 @@ PainterPlugin {
   }
 
 }
-
-// import QtQml 2.1
-// import QtQuick 2.7
-// import QtWebSockets 1.0
-// import Painter 1.0
-
-
-// PainterPlugin {
-//   id: root    
-//   property var menu_btn : null
-
-//   // Declare a WebSocket server listening on the port 12345
-//   // The WebSocket url will be ws://localhost:12345/ or ws://[MY_IP]:12345/
-//   WebSocketServer {
-//     listen: true
-//     port: 12345
-
-//     onClientConnected: {
-//       log_debug("New client connected");
-//       // The clientConnected signal is called with a webSocket object in parameter that represents
-//       // the newly created connection between the server and the client.
-//       // When we receive a message from a connected client, display it, then send back a message.
-//       webSocket.onTextMessageReceived.connect(function(message) {
-//         var date = (new Date()).toLocaleTimeString();
-
-//         log_debug("Message received at %1: %2".arg(date).arg(message));
-//         for (var alg_property in alg.ui)
-//             log_debug("%1".arg(alg_property));
-
-//         webSocket.sendTextMessage(( // Send HTML content to be displayed in the browser
-//           "<h1>Hello!</h3>" +
-//           "<p>Your are connected to Substance Painter via a WebSocket</p>" +
-//           "<ul>" +
-//           "  <li>Time: %1</li>" +
-//           "  <li>Substance Painter version: %2</li>" +
-//           "  <li>Scripting API version: %3</li>" +
-//           "  <li>%4" +
-//           "</ul>"
-//         ).arg(date).arg(alg.version.painter).arg(alg.version.api).arg(alg));
-//       });
-//     }
-//   }
-
-//   Component.onCompleted: {
-//     for (var alg_property in alg.ui)
-//         log_debug("%1".arg(alg_property));
-
-//     log_debug(JSON.stringify(alg, null, "\t"));
-
-//     function iterate(obj, stack) {
-//             for (var property in obj) {
-//                 if (obj.hasOwnProperty(property)) {
-//                     if (typeof obj[property] == "object") {
-//                         iterate(obj[property], stack + '.' + property);
-//                     } else {
-//                         log_debug(stack +"." + property + "   " + obj[property]);
-//                         //$('#output').append($("<div/>").text(stack + '.' + property))
-//                     }
-//                 }
-//             }
-//         }
-//     iterate(this, '');
-//     iterate(alg, '');
-//     // this.width = 100;
-//     // this.height = 100;
-//     // this.grabToImage(function(result) {
-//     //                        result.saveToFile("c:/temp/temp.png");
-//     //                    });
-//     // log_debug("project.name: " + alg.project.name());
-//     menu_btn = alg.ui.addWidgetToPluginToolBar("menu.qml")
-//     //menu_btn.buttonClicked.connect( root.open_shotgun_menu )
-//     var date = (new Date()).toLocaleTimeString();
-//     log_debug(("Reloaded %1").arg(date));
-//   }
-
-// }

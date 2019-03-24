@@ -44,7 +44,7 @@ class ThumbnailHook(Hook):
 
     def _extract_substancepainter_thumbnail(self):
         """
-        Render a thumbnail for the current canvas in Natron
+        Render a thumbnail for the current canvas in Substance Painter
 
         :returns:   The path to the thumbnail on disk
         """

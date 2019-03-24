@@ -21,7 +21,6 @@ __contact__ = "https://www.linkedin.com/in/diegogh/"
 HookBaseClass = sgtk.get_hook_baseclass()
 
 
-
 class SubstancePainterStartVersionControlPlugin(HookBaseClass):
     """
     Simple plugin to insert a version number into the Substance Painter file path if one
