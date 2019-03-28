@@ -109,6 +109,7 @@ class Client(QtCore.QObject):
     def on_error(self, error_code):
         self.log_error("client: on_error: {}".format(error_code))
         self.log_error(self.client.errorString())
+        self.engine.process_request("QUIT")
 
     def on_state_changed(self, state):
         self.log_debug("client: on_state_changed: %s" % state)
@@ -251,6 +252,12 @@ class EngineClient(Client):
     def get_project_export_path(self):
         result = self.send_and_receive("GET_PROJECT_EXPORT_PATH")
         return result
+
+    def get_map_export_information(self):
+        result = self.send_and_receive("GET_MAP_EXPORT_INFORMATION")
+        return result
+
+
 
     def log_info(self, message):
         self.send_text_message("LOG_INFO", message=message)

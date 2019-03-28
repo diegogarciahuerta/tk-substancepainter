@@ -81,20 +81,21 @@ class SubstancePainterSessionCollector(HookBaseClass):
         item = self.collect_current_substancepainter_session(settings, parent_item)
 
         if item:
-            resource_items = self.collect_current_substancepainter_exports(settings, item)
+            # resource_items = self.collect_current_substancepainter_exports(settings, item)
+            resource_items = self.collect_current_substancepainter_textures(settings, item)
 
     def collect_current_substancepainter_exports(self, settings, parent_item):
         publisher = self.parent
         engine = sgtk.platform.current_engine()
-        engine.log_debug("Collecting exported textures...")
+        self.logger.debug("Collecting exported textures...")
         export_path = engine.app.get_project_export_path()
 
-        engine.log_debug("export_path: %s" % export_path)
+        self.logger.debug("export_path: %s" % export_path)
 
         if export_path:
             textures = os.listdir(export_path)
             if textures:
-                engine.log_debug("textures: %s" % textures)
+                self.logger.debug("textures: %s" % textures)
                 textures_item = parent_item.create_item(
                     "substancepainter.textures",
                     "Textures",
@@ -110,6 +111,38 @@ class SubstancePainterSessionCollector(HookBaseClass):
 
                 textures_item.properties["path"] = export_path
                 textures_item.properties["publish_type"] = "Substance Painter Textures Folder"
+
+    def collect_current_substancepainter_textures(self, settings, parent_item):
+        publisher = self.parent
+        engine = sgtk.platform.current_engine()
+        self.logger.debug("Collecting exported textures...")
+        map_export_info = engine.app.get_map_export_information()
+
+        self.logger.debug("map_export_info: %s" % map_export_info)
+
+        icon_path = os.path.join(
+            self.disk_location,
+            os.pardir,
+            "icons",
+            "texture.png"
+        )
+
+        for texture_set_name, texture_set in map_export_info.iteritems(): 
+            for texture_file in texture_set.values():
+                if os.path.exists(texture_file):
+                    _, filenamefile = os.path.split(texture_file)
+                    texture_name, _ = os.path.splitext(filenamefile)
+                    
+                    self.logger.debug("texture: %s" % texture_file)
+                    textures_item = parent_item.create_item(
+                        "substancepainter.texture",
+                        "Textures",
+                        texture_name
+                    )                
+                    textures_item.set_icon_from_path(icon_path)
+
+                    textures_item.properties["path"] = texture_file
+                    textures_item.properties["publish_type"] = "Texture"
 
 
     def collect_current_substancepainter_session(self, settings, parent_item):

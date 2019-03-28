@@ -143,7 +143,7 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         accept() method. Strings can contain glob patters such as *, for 
         example ["substancepainter.*", "file.substancepainter"]
         """
-        return ["substancepainter.textures"]
+        return ["substancepainter.texture"]
 
     def accept(self, settings, item):
         """
@@ -207,25 +207,11 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
             self.logger.error(error_msg)
             raise Exception(error_msg)
 
-        export_path = _export_path()
-        if not os.path.isdir(export_path):
-            error_msg = "Validation failed. Export path does not exist on disk."
+        path = item.properties["path"]
+        if not os.path.isfile(path):
+            error_msg = "Validation failed. Texture path does not exist on disk. %s" % path
             self.logger.error(error_msg)
             raise Exception(error_msg)
-
-        item.properties["export_path"] = export_path
-
-        textures = os.listdir(export_path)
-        textures = [os.path.join(export_path, texture) for texture in textures]
-        textures = [texture for texture in textures if os.path.isfile(texture)]
-        self.logger.debug("Files in export path: %s" % textures)
-
-        if not textures:
-            error_msg = "Validation failed. Export path does not contain any texture."
-            self.logger.error(error_msg)
-            raise Exception(error_msg)
-
-        item.properties["textures"] = textures
 
         return True
 
@@ -244,35 +230,31 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
 
         publish_template = item.properties["publish_template"]
         publish_type =  item.properties["publish_type"]
+        src = item.properties["path"]
+        _, filename = os.path.split(src)
+        filenamefile, extension = os.path.splitext(filename)
 
         # Get fields from the current context
         fields = {}
         ctx_fields = self.parent.context.as_template_fields(publish_template)
         fields.update(ctx_fields)
 
-        # # a texture folder publish template
-        # substancepainter_asset_textures_path_publish:
-        #     definition: '@asset_publish_area_substancepainter/textures/{Asset}_textures_v{version}'
-        #     root_name: 'primary'
-
-        publish_name = fields['Asset'] + "_textures"
+        publish_name = fields['Asset'] + "_" + filenamefile
 
         existing_publishes = self._find_publishes(self.parent.context, publish_name, publish_type)
         version = max([p["version_number"] for p in existing_publishes] or [0]) + 1
         fields["version"] = version
-
+        fields["texture_name"] = filenamefile
+        fields["texture_extension"] = extension[1:] # no dot
         publish_path = publish_template.apply_fields(fields)
         publish_path = sgtk.util.ShotgunPath.normalize(publish_path)
 
+        publish_dir, filenamefile = os.path.split(publish_path)
+
         # make sure destination folder exists
-        ensure_folder_exists(publish_path)
+        ensure_folder_exists(publish_dir)
 
-        textures = item.properties["textures"]
-
-        for src in textures:
-            _, filenamefile = os.path.split(src)
-            dst = os.path.join(publish_path, filenamefile)
-            sgtk.util.filesystem.copy_file(src, dst) 
+        sgtk.util.filesystem.copy_file(src, publish_path) 
 
         self.logger.info("A Publish will be created in Shotgun and linked to:")
         self.logger.info("  %s" % (publish_path,))
@@ -288,7 +270,7 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         self.logger.info("Registering publish...")
 
         publish_data = {
-            "tk": publisher.sgtk,
+            "tk": publisher.sgtk,   
             "context": item.context,
             "comment": item.description,
             "path": publish_path,

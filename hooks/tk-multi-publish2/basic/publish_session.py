@@ -326,6 +326,8 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
 
         # let the base class register the publish
         super(SubstancePainterSessionPublishPlugin, self).publish(settings, item)
+        item.properties.sg_publish_path = item.properties.sg_publish_data['path']['local_path']
+        
 
     def finalize(self, settings, item):
         """

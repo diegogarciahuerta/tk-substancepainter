@@ -376,6 +376,15 @@ PainterPlugin {
     return saveSessionDialog.open();
   }
 
+  function getMapExportInformation(data)
+  {
+    var export_preset = alg.mapexport.getProjectExportPreset();
+    var export_options = alg.mapexport.getProjectExportOptions();
+    var export_path = alg.mapexport.exportPath();
+    return alg.mapexport.getPathsExportDocumentMaps(export_preset, export_path, export_options.fileFormat)
+  }
+
+
   CommandServer {
     id: server
     Component.onCompleted: {
@@ -395,6 +404,7 @@ PainterPlugin {
       registerCallback("GET_PROJECT_SETTINGS", getProjectSettings);
       registerCallback("GET_RESOURCE_INFO", getResourceInfo);
       registerCallback("GET_PROJECT_EXPORT_PATH", getProjectExportPath);
+      registerCallback("GET_MAP_EXPORT_INFORMATION", getMapExportInformation);
 
       registerCallback("INFO", info);
       //checkConnectionTimer.start();
