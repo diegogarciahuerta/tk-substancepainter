@@ -21,6 +21,7 @@ settings.tk-multi-loader2.substancepainter:
   actions_hook: '{engine}/tk-multi-loader2/tk-substancepainter_actions.py'
   action_mappings:
     Image: [environment, colorlut, alpha, texture]
+    Texture: [environment, colorlut, alpha, texture]
     Rendered Image: [environment, colorlut, alpha, texture]
     Substance Material Preset: [preset]
     Sppr File: [preset]

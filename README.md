@@ -21,6 +21,7 @@ With the engine, hooks for most of the standard tk application are provided:
 * [tk-multi-snapshot](#tk-multi-snapshot)
 * [tk-multi-loader2](#tk-multi-loader2)
 * [tk-multi-publish2](#tk-multi-publish2)
+* [tk-multi-breakdown](#tk-multi-breakdown)
 
 **Note(s) for developers:**The communication between the engine written in python and substance painter is done through QtWebsockets implementation in QML and in PySide2. PySide2 is borrowed from the the shotgun [tk-framework-unrealqt](https://github.com/ue4plugins/tk-framework-unrealqt) framework.
 
@@ -195,16 +196,51 @@ Hooks are provided to be able to use this tk-app, similar to workfiles2.
 
 The Shotgun Loader lets you quickly overview and browse the files that you have published to Shotgun. A searchable tree view navigation system makes it easy to quickly get to the task, shot or asset that you are looking for and once there the loader shows a thumbnail based overview of all the publishes for that item. Through configurable hooks you can then easily reference or import a publish into your current scene.
 
-The hooks provided support all the image formats, ffmpeg video formats and LUTs supported in Substance Painter as of version 2.3.14. A " create read node" action has been implemented where internally the right Substance Painter plugin is used and configured accordingly, ie. 'fr.inria.openfx.OCIOFileTransform' used for LUTs,  'fr.inria.openfx.ReadOIIO' node is used for image extensions, 'fr.inria.openfx.ReadFFmpeg' for videos, and so on, with pdf, svg, psd, etc ... files.
+Hook provided support the updating of the following type of files and their related valid usages as resources within Substance Painter:
+- Image: (environment, colorlut, alpha, texture)
+- Texture: (environment, colorlut, alpha, texture)
+- Rendered Image: (environment, colorlut, alpha, texture)
+- Substance Material Preset: (preset)
+- Sppr File: (preset)
+- PopcornFX: (script)
+- Pkfx File: (script)
+- Shader: (shader)
+- Glsl File: (shader)
+- Substance Export Preset: (export)
+- Spexp File: (export)
+- Substance Smart Material: (smartmaterial)
+- Spsm File: (smartmaterial)
+- Substance File: (basematerial, alpha, texture, filter, procedural, generator)
+- Sbsar File: (basematerial, alpha, texture, filter, procedural, generator)
+- Substance Smart Mask: (smartmask)
+- Spmsk File: (smartmask)
 
 ## [tk-multi-publish2](https://support.shotgunsoftware.com/hc/en-us/articles/115000097513)
 ![tk-substancepainter_screenshot03](config/images/tk-substancepainter_screenshot03.PNG)
 
 The Publish app allows artists to publish their work so that it can be used by artists downstream. It supports traditional publishing workflows within the artist’s content creation software as well as stand-alone publishing of any file on disk. When working in content creation software and using the basic Shotgun integration, the app will automatically discover and display items for the artist to publish. For more sophisticated production needs, studios can write custom publish plugins to drive artist workflows.
 
-Only the basic publishing of the current session is provided with this app. No publishing of write nodes has been implemented yet.
+The basic publishing of the current session is provided with this app. In addition to this, two different modes for the exported textures are provided:
 
-For completion, I've kept the original README from shotgun, that include very valuable links:
+In the tk-multi-publish2.yml configuration file, under the collector_settings section, you will find a setting that allows to publish textures as a single folder ("Texture Folder" published file type), or publish the textures individually as textures ("Texture" published file type). By default or if this setting is missing it is configured to publish a a Texture Folder.
+
+```yaml
+settings.tk-multi-publish2.substancepainter.asset_step:
+  collector: "{self}/collector.py:{engine}/tk-multi-publish2/basic/collector.py"
+  collector_settings:
+      Work Template: substancepainter_asset_work
+      **Publish Textures as Folder: true**
+```
+
+
+## [tk-multi-breakdown](https://support.shotgunsoftware.com/hc/en-us/articles/219032988)
+![tk-substancepainter_screenshot02](config/images/tk-substancepainter_screenshot02.PNG)
+
+The Scene Breakdown App shows you a list of items you have loaded (referenced) in your scene and tells you which ones are out of date. From this overview, you can select multiple objects and click the update button which will update all your selected items to use the latest published version.
+
+Note that this tool will only update the resources that have been loaded previously trough the Loader toolkit app.
+
+Finally, for completion, I've kept the original README from shotgun, that include very valuable links:
 
 ## Documentation
 This repository is a part of the Shotgun Pipeline Toolkit.

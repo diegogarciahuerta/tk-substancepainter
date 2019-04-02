@@ -60,7 +60,17 @@ class SubstancePainterSessionCollector(HookBaseClass):
                                "to publish plugins via the collected item's "
                                "properties. ",
             },
+            "Publish Textures as Folder": {
+                "type": "bool",
+                "default": True,
+                "description": "Publish Substance Painter textures as a folder."
+                               "If true (default) textures will be all exported"
+                               " together as a folder publish."
+                               "If false, each texture will be exported and"
+                               " published as each own version stream.",
+            },
         }
+
 
         # update the base settings with these settings
         collector_settings.update(substancepainter_session_settings)
@@ -81,10 +91,13 @@ class SubstancePainterSessionCollector(HookBaseClass):
         item = self.collect_current_substancepainter_session(settings, parent_item)
 
         if item:
-            # resource_items = self.collect_current_substancepainter_exports(settings, item)
-            resource_items = self.collect_current_substancepainter_textures(settings, item)
+            publish_as_folder_setting = settings.get("Publish Textures as Folder")
+            if publish_as_folder_setting and publish_as_folder_setting.value:
+                resource_items = self.collect_substancepainter_textures_as_folder(settings, item)
+            else:
+                resource_items = self.collect_substancepainter_textures(settings, item)
 
-    def collect_current_substancepainter_exports(self, settings, parent_item):
+    def collect_substancepainter_textures_as_folder(self, settings, parent_item):
         publisher = self.parent
         engine = sgtk.platform.current_engine()
         self.logger.debug("Collecting exported textures...")
@@ -110,9 +123,9 @@ class SubstancePainterSessionCollector(HookBaseClass):
                 textures_item.set_icon_from_path(icon_path)
 
                 textures_item.properties["path"] = export_path
-                textures_item.properties["publish_type"] = "Substance Painter Textures Folder"
+                textures_item.properties["publish_type"] = "Texture Folder"
 
-    def collect_current_substancepainter_textures(self, settings, parent_item):
+    def collect_substancepainter_textures(self, settings, parent_item):
         publisher = self.parent
         engine = sgtk.platform.current_engine()
         self.logger.debug("Collecting exported textures...")
@@ -128,15 +141,15 @@ class SubstancePainterSessionCollector(HookBaseClass):
         )
 
         for texture_set_name, texture_set in map_export_info.iteritems(): 
-            for texture_file in texture_set.values():
+            for texture_id, texture_file in texture_set.iteritems():
                 if os.path.exists(texture_file):
                     _, filenamefile = os.path.split(texture_file)
                     texture_name, _ = os.path.splitext(filenamefile)
-                    
+
                     self.logger.debug("texture: %s" % texture_file)
                     textures_item = parent_item.create_item(
                         "substancepainter.texture",
-                        "Textures",
+                        "Texture",
                         texture_name
                     )                
                     textures_item.set_icon_from_path(icon_path)

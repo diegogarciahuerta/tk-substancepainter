@@ -123,7 +123,7 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
             "Publish Template": {
                 "type": "template",
                 "default": None,
-                "description": "Template path for published work files. Should"
+                "description": "Template path for published texture folder. Should"
                 "correspond to a template defined in "
                 "templates.yml.",
             }
@@ -255,7 +255,8 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         #     definition: '@asset_publish_area_substancepainter/textures/{Asset}_textures_v{version}'
         #     root_name: 'primary'
 
-        publish_name = fields['Asset'] + "_textures"
+        context_entity_type = context.entity['Type']
+        publish_name = context_entity_type + "_textures"
 
         existing_publishes = self._find_publishes(self.parent.context, publish_name, publish_type)
         version = max([p["version_number"] for p in existing_publishes] or [0]) + 1
@@ -380,15 +381,6 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
             self.logger.error("Failed to find publishes of type '%s', called '%s', for context %s: %s" 
                               % (publish_name, publish_type, ctx, e))
         return sg_publishes
-
-
-
-def _substancepainter_find_additional_session_dependencies():
-    """
-    Find additional dependencies from the session
-    """
-
-    return []
 
 
 def _export_path():

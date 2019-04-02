@@ -27,6 +27,7 @@ HookBaseClass = sgtk.get_hook_baseclass()
 
 
 publishedfile_type_to_actions = {"Image": ('environment', 'colorlut', 'alpha', 'texture'),
+                                 "Texture": ('environment', 'colorlut', 'alpha', 'texture'),
                                  "Rendered Image": ('environment', 'colorlut', 'alpha', 'texture'),
 
                                  "Substance Material Preset": ["preset"],

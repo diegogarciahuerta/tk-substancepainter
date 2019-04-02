@@ -123,7 +123,7 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
             "Publish Template": {
                 "type": "template",
                 "default": None,
-                "description": "Template path for published work files. Should"
+                "description": "Template path for published texture files. Should"
                 "correspond to a template defined in "
                 "templates.yml.",
             }
@@ -239,7 +239,8 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         ctx_fields = self.parent.context.as_template_fields(publish_template)
         fields.update(ctx_fields)
 
-        publish_name = fields['Asset'] + "_" + filenamefile
+        context_entity_type = context.entity['Type']
+        publish_name = context_entity_type + "_" + filenamefile
 
         existing_publishes = self._find_publishes(self.parent.context, publish_name, publish_type)
         version = max([p["version_number"] for p in existing_publishes] or [0]) + 1
