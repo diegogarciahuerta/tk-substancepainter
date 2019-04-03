@@ -53,7 +53,7 @@ settings.tk-multi-workfiles2.substancepainter.project:
   version_compare_ignore_fields: []
   location: "@apps.tk-multi-workfiles2.location"
 
-# asset_step
+# # asset_step
 settings.tk-multi-workfiles2.substancepainter.asset_step:
   hook_scene_operation: "{engine}/tk-multi-workfiles2/scene_operation_tk-substancepainter.py"
   template_publish: substancepainter_asset_publish

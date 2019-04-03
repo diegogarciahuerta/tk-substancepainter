@@ -18,4 +18,5 @@
 
 settings.tk-multi-breakdown.substancepainter:
   hook_scene_operations: '{engine}/tk-multi-breakdown/tk-substancepainter_scene_operations.py'
-  location: "@apps.tk-multi-breakdown.location"  
+  location: "@apps.tk-multi-breakdown.location"
+

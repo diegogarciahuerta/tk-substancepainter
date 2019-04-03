@@ -257,7 +257,10 @@ class EngineClient(Client):
         result = self.send_and_receive("GET_MAP_EXPORT_INFORMATION")
         return result
 
-
+    def export_document_maps(self, destination):
+        result = self.send_and_receive("EXPORT_DOCUMENT_MAPS", destination=destination)
+        return result
+        
 
     def log_info(self, message):
         self.send_text_message("LOG_INFO", message=message)

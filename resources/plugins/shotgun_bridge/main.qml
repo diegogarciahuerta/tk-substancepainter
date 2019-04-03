@@ -15,8 +15,7 @@ PainterPlugin {
   id: root
   property var openMenuButton: null
   property bool isEngineLoaded: false
-  property double shotgun_heartbeat_interval: 1.0; 
-  property int initDelayOnProjectCreation: 5000 /*ms*/
+  // property double shotgun_heartbeat_interval: 1.0; 
   property bool debug: false;
 
   function log_info(message)
@@ -85,15 +84,16 @@ PainterPlugin {
     server.sendCommand("PROJECT_OPENED", {path:currentProjectPath()});
   }
 
-
-  Timer {
-    id: checkConnectionTimer
-    repeat: true
-    interval: root.shotgun_heartbeat_interval * 1000
-    onTriggered: checkConnection()
-  }
+  // Timer {
+  //   id: checkConnectionTimer
+  //   repeat: true
+  //   interval: root.shotgun_heartbeat_interval * 1000
+  //   onTriggered: checkConnection()
+  // }
 
   function getQueryParams(qs) {
+    // This takes care of parsing the parameters passed in the command line
+    // to substance painter
     qs = qs.split('+').join(' ');
 
     var params = {},
@@ -110,6 +110,7 @@ PainterPlugin {
 
   function onProcessEndedCallback(result)
   {
+    // We try to keep the engine alive by restarting it if something went wrong.
     log_warning("Shotgun Substance Painter Engine connection was lost. Restarting engine...");
     if (result.crashed)
     {
@@ -126,13 +127,14 @@ PainterPlugin {
     var sgtk_substancepainter_engine_python = '"' + query.SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON + '"'
     log_info("starting tk-substancepainter engine with params: " + sgtk_substancepainter_engine_python + " " + sgtk_substancepainter_engine_startup)
     alg.subprocess.start(sgtk_substancepainter_engine_python + " " + sgtk_substancepainter_engine_startup, onProcessEndedCallback)
-    // var result = alg.subprocess.check_call("c:/Python27/python -c \"import sys;import os;f = open('c:/temp/temp.txt', 'wt'); f.write('%s'%os.environ);f.write('%s'%sys.path);f.close()\"")
-    // log_debug("Result:" + result)
   }
 
   function checkConnection(data) 
   {
-      server.sendCommand("PING", {});
+      // TODO: check if the subprocess where the engine is running is still alive.
+      // Might not be needed as if we use a callback in the start of the process
+      // that tell us when the process is finished, and also the server knows
+      // when the client drops it's connection.
   }
 
   function displayMenu(data) 
@@ -384,6 +386,14 @@ PainterPlugin {
     return alg.mapexport.getPathsExportDocumentMaps(export_preset, export_path, export_options.fileFormat)
   }
 
+  function exportDocumentMaps(data)
+  {
+    var export_preset = alg.mapexport.getProjectExportPreset();
+    var export_options = alg.mapexport.getProjectExportOptions();
+    var export_path = data.destination;
+    return alg.mapexport.exportDocumentMaps(export_preset, export_path, export_options.fileFormat)
+  }
+
 
   CommandServer {
     id: server
@@ -405,6 +415,7 @@ PainterPlugin {
       registerCallback("GET_RESOURCE_INFO", getResourceInfo);
       registerCallback("GET_PROJECT_EXPORT_PATH", getProjectExportPath);
       registerCallback("GET_MAP_EXPORT_INFORMATION", getMapExportInformation);
+      registerCallback("EXPORT_DOCUMENT_MAPS", exportDocumentMaps);
 
       registerCallback("INFO", info);
       //checkConnectionTimer.start();

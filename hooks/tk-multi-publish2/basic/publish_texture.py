@@ -239,14 +239,14 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         ctx_fields = self.parent.context.as_template_fields(publish_template)
         fields.update(ctx_fields)
 
-        context_entity_type = context.entity['Type']
+        context_entity_type = self.parent.context.entity['type']
         publish_name = context_entity_type + "_" + filenamefile
 
         existing_publishes = self._find_publishes(self.parent.context, publish_name, publish_type)
         version = max([p["version_number"] for p in existing_publishes] or [0]) + 1
         fields["version"] = version
-        fields["texture_name"] = filenamefile
-        fields["texture_extension"] = extension[1:] # no dot
+        fields["channel"] = filenamefile
+        fields["extension"] = extension[1:] # no dot
         publish_path = publish_template.apply_fields(fields)
         publish_path = sgtk.util.ShotgunPath.normalize(publish_path)
 
@@ -365,15 +365,6 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         return sg_publishes
 
 
-
-def _substancepainter_find_additional_session_dependencies():
-    """
-    Find additional dependencies from the session
-    """
-
-    return []
-
-
 def _export_path():
     """
     Return the path to the current session
@@ -388,3 +379,4 @@ def _export_path():
         path = path.encode("utf-8")
 
     return path
+

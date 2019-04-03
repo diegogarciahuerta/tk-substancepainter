@@ -8,7 +8,7 @@ Button {
   antialiasing: true
   height: 32
   width: 32
-  tooltip: "Open Shotung Menu"
+  tooltip: "Open Shotgun Menu"
   property var clickedPosition: null
   property bool isEngineLoaded: false
   property bool isHovered: false

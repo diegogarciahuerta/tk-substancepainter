@@ -123,8 +123,8 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
             "Publish Template": {
                 "type": "template",
                 "default": None,
-                "description": "Template path for published texture folder. Should"
-                "correspond to a template defined in "
+                "description": "Template path for published texture folder. "
+                "Should correspond to a template defined in "
                 "templates.yml.",
             }
         }
@@ -250,12 +250,7 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         ctx_fields = self.parent.context.as_template_fields(publish_template)
         fields.update(ctx_fields)
 
-        # # a texture folder publish template
-        # substancepainter_asset_textures_path_publish:
-        #     definition: '@asset_publish_area_substancepainter/textures/{Asset}_textures_v{version}'
-        #     root_name: 'primary'
-
-        context_entity_type = context.entity['Type']
+        context_entity_type = self.parent.context.entity['type']
         publish_name = context_entity_type + "_textures"
 
         existing_publishes = self._find_publishes(self.parent.context, publish_name, publish_type)

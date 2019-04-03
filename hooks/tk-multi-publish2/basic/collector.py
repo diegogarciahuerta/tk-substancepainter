@@ -60,6 +60,13 @@ class SubstancePainterSessionCollector(HookBaseClass):
                                "to publish plugins via the collected item's "
                                "properties. ",
             },
+            "Work Export Template": {
+                "type": "template",
+                "default": None,
+                "description": "Template path for where the textures are exported. Should"
+                "correspond to a template defined in "
+                "templates.yml.",
+            },
             "Publish Textures as Folder": {
                 "type": "bool",
                 "default": True,
@@ -68,7 +75,7 @@ class SubstancePainterSessionCollector(HookBaseClass):
                                " together as a folder publish."
                                "If false, each texture will be exported and"
                                " published as each own version stream.",
-            },
+            }
         }
 
 
@@ -97,11 +104,48 @@ class SubstancePainterSessionCollector(HookBaseClass):
             else:
                 resource_items = self.collect_substancepainter_textures(settings, item)
 
-    def collect_substancepainter_textures_as_folder(self, settings, parent_item):
+    def get_export_path(self, settings):
         publisher = self.parent
-        engine = sgtk.platform.current_engine()
+
+        work_template = None
+        work_template_setting = settings.get("Work Template")
+        if work_template_setting:
+            work_template = publisher.engine.get_template_by_name(
+                work_template_setting.value)
+            self.logger.debug("Work template defined for Substance Painter collection.")
+
+        work_export_template = None
+        work_export_template_setting = settings.get("Work Export Template")
+        if work_export_template_setting:
+            self.logger.debug("Work Export template settings: %s" % work_export_template_setting)
+            work_export_template = publisher.engine.get_template_by_name(
+                work_export_template_setting.value)
+            self.logger.debug("Work Export template defined for Substance Painter collection.")
+
+
+        if work_export_template and work_template:
+            path = publisher.engine.app.get_current_project_path()
+            fields = work_template.get_fields(path)
+            export_path = work_export_template.apply_fields(fields)
+            self.logger.debug("Work Export Path is: %s " % export_path)
+            return export_path
+
+    def collect_substancepainter_textures_as_folder(self, settings, parent_item):
+        self.logger.debug("Collecting textures as folder")
+        publisher = self.parent
+        engine = publisher.engine
+
+        self.logger.debug("Exporting textures...")
+
+        export_path = self.get_export_path(settings)
+        if not export_path:
+            export_path = engine.app.get_project_export_path()
+
+        engine.show_busy("Exporting textures", "Texture are being exported so they can be published.\n\nPlease wait...")
+        map_export_info = engine.app.export_document_maps(export_path)
+        engine.clear_busy()
+
         self.logger.debug("Collecting exported textures...")
-        export_path = engine.app.get_project_export_path()
 
         self.logger.debug("export_path: %s" % export_path)
 
@@ -126,12 +170,22 @@ class SubstancePainterSessionCollector(HookBaseClass):
                 textures_item.properties["publish_type"] = "Texture Folder"
 
     def collect_substancepainter_textures(self, settings, parent_item):
+        self.logger.debug("Collecting textures individually")
         publisher = self.parent
         engine = sgtk.platform.current_engine()
-        self.logger.debug("Collecting exported textures...")
-        map_export_info = engine.app.get_map_export_information()
+
+        export_path = self.get_export_path(settings)
+        if not export_path:
+            export_path = engine.app.get_project_export_path()
+
+        self.logger.debug("Exporting textures...")
+        engine.show_busy("Exporting textures", "Texture are being exported so they can be published.\n\nPlease wait...")
+        map_export_info = engine.app.export_document_maps(export_path)
+        engine.clear_busy()
 
         self.logger.debug("map_export_info: %s" % map_export_info)
+
+        self.logger.debug("Collecting exported textures...")
 
         icon_path = os.path.join(
             self.disk_location,
