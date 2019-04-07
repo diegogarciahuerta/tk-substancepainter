@@ -260,7 +260,15 @@ class EngineClient(Client):
     def export_document_maps(self, destination):
         result = self.send_and_receive("EXPORT_DOCUMENT_MAPS", destination=destination)
         return result
-        
+
+    def update_document_resources(self, old_url, new_url):
+        result = self.send_and_receive("UPDATE_DOCUMENT_RESOURCES", old_url=old_url, new_url=new_url)
+        return result
+
+    def document_resources(self):
+        result = self.send_and_receive("DOCUMENT_RESOURCES")
+        return result
+
 
     def log_info(self, message):
         self.send_text_message("LOG_INFO", message=message)

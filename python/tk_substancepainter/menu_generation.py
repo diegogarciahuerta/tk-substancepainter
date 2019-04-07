@@ -51,27 +51,12 @@ class MenuGenerator(object):
         self._engine.logger.debug("show menu")
         pos = QtGui.QCursor.pos() if pos is None else QtCore.QPoint(pos[0],
                                                                     pos[1]) 
-        #self.menu_handle.setFocus()
-
-        self._engine.logger.debug("show menu at pos: %s" % pos)
-
         qApp = QtWidgets.QApplication.instance()
-
-        self._engine.logger.debug("show menu with qApp: %s" % qApp)
-
         #qApp.setWindowState(QtCore.Qt.WindowActive)
 
-        self._engine.logger.debug("show menu setWindowState qApp: %s" % qApp)
-
         self.menu_handle.activateWindow()
-        self._engine.logger.debug("show menu activateWindow")
         self.menu_handle.raise_()
-        self._engine.logger.debug("show menu raise_")
         self.menu_handle.exec_(pos)
-        self._engine.logger.debug("show menu popup")
-
-
-
         
     def create_menu(self, disabled=False):
         """
@@ -340,3 +325,12 @@ class AppCommand(object):
         # self._execute_deferred)
         self.parent._add_menu_item(parts[-1], parent_menu,
                                    self.callback, self.properties)
+
+    def _find_sub_menu_item(self, menu, label):
+        """
+        Find the 'sub-menu' menu item with the given label
+        """
+        for action in menu.actions():
+            if action.text() == label:
+                return action.menu()
+        return None

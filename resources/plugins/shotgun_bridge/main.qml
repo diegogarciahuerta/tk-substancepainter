@@ -344,7 +344,7 @@ PainterPlugin {
 
       alg.project.settings.setValue("tk-multi-loader2", settings);
 
-      return settings;
+      return result;
     }
     catch (err) {
       alg.log.exception(err)
@@ -394,6 +394,16 @@ PainterPlugin {
     return alg.mapexport.exportDocumentMaps(export_preset, export_path, export_options.fileFormat)
   }
 
+  function updateDocumentResources(data)
+  {
+    return alg.resources.updateDocumentResources(data.old_url, data.new_url);
+  }
+
+  function documentResources(data)
+  {
+    return alg.resources.documentResources();
+  }
+
 
   CommandServer {
     id: server
@@ -416,6 +426,8 @@ PainterPlugin {
       registerCallback("GET_PROJECT_EXPORT_PATH", getProjectExportPath);
       registerCallback("GET_MAP_EXPORT_INFORMATION", getMapExportInformation);
       registerCallback("EXPORT_DOCUMENT_MAPS", exportDocumentMaps);
+      registerCallback("UPDATE_DOCUMENT_RESOURCES", updateDocumentResources);
+      registerCallback("DOCUMENT_RESOURCES", documentResources);
 
       registerCallback("INFO", info);
       //checkConnectionTimer.start();
