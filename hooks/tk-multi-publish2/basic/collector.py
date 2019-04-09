@@ -1,11 +1,11 @@
 # Copyright (c) 2017 Shotgun Software Inc.
-# 
+#
 # CONFIDENTIAL AND PROPRIETARY
-# 
-# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit 
+#
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
 # Source Code License included in this distribution package. See LICENSE.
-# By accessing, using, copying or modifying this work you indicate your 
-# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
+# By accessing, using, copying or modifying this work you indicate your
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 import os
@@ -20,10 +20,13 @@ __contact__ = "https://www.linkedin.com/in/diegogh/"
 HookBaseClass = sgtk.get_hook_baseclass()
 
 
+SESSION_PUBLISHED_TYPE = "Substance Painter Project File"
+
+
 class SubstancePainterSessionCollector(HookBaseClass):
     """
-    Collector that operates on the substance painter session. Should inherit from the
-    basic collector hook.
+    Collector that operates on the substance painter session. Should inherit 
+    from the basic collector hook.
     """
 
     @property
@@ -47,7 +50,9 @@ class SubstancePainterSessionCollector(HookBaseClass):
         """
 
         # grab any base class settings
-        collector_settings = super(SubstancePainterSessionCollector, self).settings or {}
+        collector_settings = (
+            super(SubstancePainterSessionCollector, self).settings or {}
+        )
 
         # settings specific to this collector
         substancepainter_session_settings = {
@@ -55,29 +60,28 @@ class SubstancePainterSessionCollector(HookBaseClass):
                 "type": "template",
                 "default": None,
                 "description": "Template path for artist work files. Should "
-                               "correspond to a template defined in "
-                               "templates.yml. If configured, is made available"
-                               "to publish plugins via the collected item's "
-                               "properties. ",
+                "correspond to a template defined in "
+                "templates.yml. If configured, is made available"
+                "to publish plugins via the collected item's "
+                "properties. ",
             },
             "Work Export Template": {
                 "type": "template",
                 "default": None,
-                "description": "Template path for where the textures are exported. Should"
-                "correspond to a template defined in "
+                "description": "Template path for where the textures are "
+                "exported. Should correspond to a template defined in "
                 "templates.yml.",
             },
             "Publish Textures as Folder": {
                 "type": "bool",
                 "default": True,
                 "description": "Publish Substance Painter textures as a folder."
-                               "If true (default) textures will be all exported"
-                               " together as a folder publish."
-                               "If false, each texture will be exported and"
-                               " published as each own version stream.",
-            }
+                "If true (default) textures will be all exported"
+                " together as a folder publish."
+                "If false, each texture will be exported and"
+                " published as each own version stream.",
+            },
         }
-
 
         # update the base settings with these settings
         collector_settings.update(substancepainter_session_settings)
@@ -86,8 +90,8 @@ class SubstancePainterSessionCollector(HookBaseClass):
 
     def process_current_session(self, settings, parent_item):
         """
-        Analyzes the current session open in Substance Painter and parents a subtree of
-        items under the parent_item passed in.
+        Analyzes the current session open in Substance Painter and parents a 
+        subtree of items under the parent_item passed in.
 
         :param dict settings: Configured settings for this collector
         :param parent_item: Root item instance
@@ -95,14 +99,18 @@ class SubstancePainterSessionCollector(HookBaseClass):
         """
 
         # create an item representing the current substance painter session
-        item = self.collect_current_substancepainter_session(settings, parent_item)
+        item = self.collect_current_substancepainter_session(
+            settings, parent_item
+        )
 
         if item:
-            publish_as_folder_setting = settings.get("Publish Textures as Folder")
+            publish_as_folder_setting = settings.get(
+                "Publish Textures as Folder"
+            )
             if publish_as_folder_setting and publish_as_folder_setting.value:
-                resource_items = self.collect_substancepainter_textures_as_folder(settings, item)
+                resource_items = self.collect_textures_as_folder(settings, item)
             else:
-                resource_items = self.collect_substancepainter_textures(settings, item)
+                resource_items = self.collect_textures(settings, item)
 
     def get_export_path(self, settings):
         publisher = self.parent
@@ -111,90 +119,103 @@ class SubstancePainterSessionCollector(HookBaseClass):
         work_template_setting = settings.get("Work Template")
         if work_template_setting:
             work_template = publisher.engine.get_template_by_name(
-                work_template_setting.value)
-            self.logger.debug("Work template defined for Substance Painter collection.")
+                work_template_setting.value
+            )
+
+            self.logger.debug(
+                "Work template defined for Substance Painter collection."
+            )
 
         work_export_template = None
         work_export_template_setting = settings.get("Work Export Template")
         if work_export_template_setting:
-            self.logger.debug("Work Export template settings: %s" % work_export_template_setting)
-            work_export_template = publisher.engine.get_template_by_name(
-                work_export_template_setting.value)
-            self.logger.debug("Work Export template defined for Substance Painter collection.")
+            self.logger.debug(
+                "Work Export template settings: %s"
+                % work_export_template_setting
+            )
 
+            work_export_template = publisher.engine.get_template_by_name(
+                work_export_template_setting.value
+            )
+
+            self.logger.debug(
+                "Work Export template defined for Substance Painter collection."
+            )
 
         if work_export_template and work_template:
             path = publisher.engine.app.get_current_project_path()
             fields = work_template.get_fields(path)
             export_path = work_export_template.apply_fields(fields)
+
             self.logger.debug("Work Export Path is: %s " % export_path)
+
             return export_path
 
-    def collect_substancepainter_textures_as_folder(self, settings, parent_item):
-        self.logger.debug("Collecting textures as folder")
+    def collect_textures_as_folder(self, settings, parent_item):
         publisher = self.parent
         engine = publisher.engine
 
-        self.logger.debug("Exporting textures...")
+        self.logger.debug("Exporting textures as a folder...")
 
         export_path = self.get_export_path(settings)
         if not export_path:
             export_path = engine.app.get_project_export_path()
 
-        engine.show_busy("Exporting textures", "Texture are being exported so they can be published.\n\nPlease wait...")
+        engine.show_busy(
+            "Exporting textures",
+            "Texture are being exported so they can "
+            "be published.\n\nPlease wait...",
+        )
+
         map_export_info = engine.app.export_document_maps(export_path)
         engine.clear_busy()
 
         self.logger.debug("Collecting exported textures...")
 
-        self.logger.debug("export_path: %s" % export_path)
-
         if export_path:
             textures = os.listdir(export_path)
             if textures:
-                self.logger.debug("textures: %s" % textures)
                 textures_item = parent_item.create_item(
                     "substancepainter.textures",
                     "Textures",
-                    "Substance Painter Textures"
-                )                
-                icon_path = os.path.join(
-                    self.disk_location,
-                    os.pardir,
-                    "icons",
-                    "texture.png"
+                    "Substance Painter Textures",
                 )
+
+                icon_path = os.path.join(
+                    self.disk_location, os.pardir, "icons", "texture.png"
+                )
+
                 textures_item.set_icon_from_path(icon_path)
 
                 textures_item.properties["path"] = export_path
                 textures_item.properties["publish_type"] = "Texture Folder"
 
-    def collect_substancepainter_textures(self, settings, parent_item):
-        self.logger.debug("Collecting textures individually")
+    def collect_textures(self, settings, parent_item):
         publisher = self.parent
         engine = sgtk.platform.current_engine()
+
+        self.logger.debug("Exporting textures...")
 
         export_path = self.get_export_path(settings)
         if not export_path:
             export_path = engine.app.get_project_export_path()
 
-        self.logger.debug("Exporting textures...")
-        engine.show_busy("Exporting textures", "Texture are being exported so they can be published.\n\nPlease wait...")
+        engine.show_busy(
+            "Exporting textures",
+            "Texture are being exported so they can "
+            "be published.\n\nPlease wait...",
+        )
+
         map_export_info = engine.app.export_document_maps(export_path)
         engine.clear_busy()
-
-        self.logger.debug("map_export_info: %s" % map_export_info)
 
         self.logger.debug("Collecting exported textures...")
 
         icon_path = os.path.join(
-            self.disk_location,
-            os.pardir,
-            "icons",
-            "texture.png"
+            self.disk_location, os.pardir, "icons", "texture.png"
         )
 
-        for texture_set_name, texture_set in map_export_info.iteritems(): 
+        for texture_set_name, texture_set in map_export_info.iteritems():
             for texture_id, texture_file in texture_set.iteritems():
                 if os.path.exists(texture_file):
                     _, filenamefile = os.path.split(texture_file)
@@ -202,15 +223,12 @@ class SubstancePainterSessionCollector(HookBaseClass):
 
                     self.logger.debug("texture: %s" % texture_file)
                     textures_item = parent_item.create_item(
-                        "substancepainter.texture",
-                        "Texture",
-                        texture_name
-                    )                
+                        "substancepainter.texture", "Texture", texture_name
+                    )
                     textures_item.set_icon_from_path(icon_path)
 
                     textures_item.properties["path"] = texture_file
                     textures_item.properties["publish_type"] = "Texture"
-
 
     def collect_current_substancepainter_session(self, settings, parent_item):
         """
@@ -238,15 +256,12 @@ class SubstancePainterSessionCollector(HookBaseClass):
         session_item = parent_item.create_item(
             "substancepainter.session",
             "Substance Painter Session",
-            display_name
+            display_name,
         )
 
         # get the icon path to display for this item
         icon_path = os.path.join(
-            self.disk_location,
-            os.pardir,
-            "icons",
-            "session.png"
+            self.disk_location, os.pardir, "icons", "session.png"
         )
         session_item.set_icon_from_path(icon_path)
 
@@ -256,7 +271,8 @@ class SubstancePainterSessionCollector(HookBaseClass):
         if work_template_setting:
 
             work_template = publisher.engine.get_template_by_name(
-                work_template_setting.value)
+                work_template_setting.value
+            )
 
             # store the template on the item for use by publish plugins. we
             # can't evaluate the fields here because there's no guarantee the
@@ -264,9 +280,10 @@ class SubstancePainterSessionCollector(HookBaseClass):
             # the attached publish plugins will need to resolve the fields at
             # execution time.
             session_item.properties["work_template"] = work_template
-            session_item.properties["publish_type"] = "Substance Painter Project File"
-            self.logger.debug("Work template defined for Substance Painter collection.")
+            session_item.properties["publish_type"] = SESSION_PUBLISHED_TYPE
 
-        self.logger.info("Collected current Substance Painter scene")
+            self.logger.debug("Work template defined for session.")
+
+        self.logger.info("Collected current Substance Painter session")
 
         return session_item

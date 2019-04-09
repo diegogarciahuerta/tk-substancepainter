@@ -26,16 +26,6 @@ from tank.log import LogManager
 from tank.platform import Engine
 from tank.platform.constants import SHOTGUN_ENGINE_NAME
 
-import logging
-logname = r"C:/temp/temp.log"
-logging.basicConfig(filename=logname,
-                            filemode='a',
-                            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                            datefmt='%H:%M:%S',
-                            level=logging.DEBUG)
-logger = logging.getLogger('tk_substancepainter.application')
-logger.info("importing application...")
-
 
 __author__ = "Diego Garcia Huerta"
 __contact__ = "https://www.linkedin.com/in/diegogh/"
@@ -47,22 +37,10 @@ SHOW_COMP_DLG = "SGTK_COMPATIBILITY_DIALOG_SHOWN"
 
 
 # logging functionality
-def show_error(msg):
-    display_error(msg)
-
-
-def show_warning(msg):
-    display_warning(msg)
-
-
-def show_info(msg):
-    display_info(msg)
-
 
 def display_error(msg):
     t = time.asctime(time.localtime())
     print("%s - Shotgun Error | Substance Painter engine | %s " % (t, msg))
-
 
 def display_warning(msg):
     t = time.asctime(time.localtime())
@@ -81,50 +59,39 @@ def display_debug(msg):
 
 
 # methods to support the state when the engine cannot start up
-# for example if a non-tank file is loaded in Substance Painter we load the project
-# context if exists, so we give a chance to the user to at least
+# for example if a non-tank file is loaded in Substance Painter we load the 
+# project context if exists, so we give a chance to the user to at least
 # do the basics operations.
 
 def refresh_engine(scene_name, prev_context):
     """
     refresh the current engine
     """
-    logger.debug("refresh_engine called")
-    logger.debug("refresh_engine called | %s | %s" % (scene_name, prev_context))
-    current_engine = tank.platform.current_engine()
 
-    logger.debug("refresh_engine called | current_engine | %s" % current_engine)
+    engine = tank.platform.current_engine()
 
-    if not current_engine:
+    if not engine:
         # If we don't have an engine for some reason then we don't have
         # anything to do.
         sys.stdout.write("refresh_engine | no engine!\n")
-        logger.debug("refresh_engine | no engine!")
         return
-
-    logger.debug("scene: %s" % scene_name)
 
     # This is a File->New call, so we just leave the engine in the current
     # context and move on.
     if scene_name == "Untitled.spp":
-        if prev_context and prev_context != current_engine.context:
-            current_engine.change_context(prev_context)
+        if prev_context and prev_context != engine.context:
+            engine.change_context(prev_context)
 
         # shotgun menu may have been removed, so add it back in if its not
         # already there.
-        current_engine.create_shotgun_menu()
+        engine.create_shotgun_menu()
         return
 
     # determine the tk instance and ctx to use:
-    tk = current_engine.sgtk
-
-    logger.debug("tk: %s" % tk)
-
+    tk = engine.sgtk
 
     # loading a scene file
     new_path = os.path.abspath(scene_name)
-
-    logger.debug("new_path: %s" % new_path)
 
     # this file could be in another project altogether, so create a new
     # API instance.
@@ -136,14 +103,15 @@ def refresh_engine(scene_name, prev_context):
         try:
             # could not detect context from path, will use the project context
             # for menus if it exists
-            ctx = current_engine.sgtk.context_from_entity_dictionary(
-                current_engine.context.project)
-            message = ("Shotgun Substance Painter Engine could not detect the context\n"
-                       "the project loaded. Shotgun menus will be reset \n"
+            ctx = engine.sgtk.context_from_entity_dictionary(
+                engine.context.project)
+            message = ("Shotgun Substance Painter Engine could not detect "
+                       "the context\n from the project loaded. "
+                       "Shotgun menus will be reset \n"
                        "to the project '%s' "
                        "context."
-                       "\n" % current_engine.context.project.get('name'))
-            display_warning(message)
+                       "\n" % engine.context.project.get('name'))
+            engine.show_warning(message)
 
         except tank.TankError, e:
             (exc_type, exc_value, exc_traceback) = sys.exc_info()
@@ -155,16 +123,16 @@ def refresh_engine(scene_name, prev_context):
             message += "\n".join(traceback.format_tb(exc_traceback))
 
             # disabled menu, could not get project context
-            current_engine.create_shotgun_menu(disabled=True)
-            display_error(message)
+            engine.create_shotgun_menu(disabled=True)
+            engine.show_error(message)
             return
+    
+    if ctx != engine.context:
+        engine.change_context(ctx)
 
     # shotgun menu may have been removed,
     # so add it back in if its not already there.
-    current_engine.create_shotgun_menu()
-
-    if ctx != tank.platform.current_engine().context:
-        current_engine.change_context(ctx)
+    engine.create_shotgun_menu()
 
 
 class SubstancePainterEngine(Engine):
@@ -188,7 +156,47 @@ class SubstancePainterEngine(Engine):
 
     @property
     def app(self):
+        """
+        Represents the DDC app connection
+        """
         return self._dcc_app
+
+    def show_message(self, msg, level="info"):
+        """
+        Displays a dialog with the message according to  the severity level
+        specified.
+        """
+        if self.qt_app_central_widget:
+            from sgtk.platform.qt5 import QtWidgets, QtGui, QtCore
+            level_icon = {"info": QtWidgets.QMessageBox.Information, 
+                          "error": QtWidgets.QMessageBox.Critical,
+                          "warning": QtWidgets.QMessageBox.Warning}
+
+            dlg = QtWidgets.QMessageBox(self.qt_app_central_widget)
+            dlg.setIcon(level_icon[level])
+            dlg.setText(msg)
+            dlg.setWindowTitle("Shotgun Substance Painter Engine")
+            dlg.setWindowFlags(dlg.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+            dlg.show()
+            dlg.exec_()
+
+    def show_error(self, msg):
+        """
+        Displays an error dialog message
+        """
+        self.show_message(msg, level="error")
+
+    def show_warning(self, msg):
+        """
+        Displays a warning dialog message
+        """
+        self.show_message(msg, level="warning")
+
+    def show_info(self, msg):
+        """
+        Displays an informative dialog message
+        """
+        self.show_message(msg, level="info")
 
     def __get_platform_resource_path(self, filename):
         """
@@ -199,13 +207,26 @@ class SubstancePainterEngine(Engine):
         tank_platform_folder = os.path.abspath(inspect.getfile(tank.platform))
         return os.path.join(tank_platform_folder, "qt", filename)
 
+    @property
+    def register_toggle_debug_command(self):
+        """
+        Indicates whether the engine should have a toggle debug logging
+        command registered during engine initialization.
+        :rtype: bool
+        """
+        return True
+
     def __toggle_debug_logging(self):
         """
         Toggles global debug logging on and off in the log manager.
         This will affect all logging across all of toolkit.
         """
+        self.logger.debug("calling substance painer with debug: %s" % LogManager().global_debug)
+
         # flip debug logging
         LogManager().global_debug = not LogManager().global_debug
+        if self.app:
+            self.app.toggle_debug_logging(LogManager().global_debug)
 
     def __open_log_folder(self):
         """
@@ -222,7 +243,7 @@ class SubstancePainterEngine(Engine):
             )
             status = QtGui.QDesktopServices.openUrl(url)
             if not status:
-                self._engine.log_error("Failed to open folder!")
+                self.log_error("Failed to open folder!")
 
     def __register_open_log_folder_command(self):
         """
@@ -262,14 +283,16 @@ class SubstancePainterEngine(Engine):
     @property
     def context_change_allowed(self):
         """
-        Whether the engine allows a context change without the need for a restart.
+        Whether the engine allows a context change without the need for a
+        restart.
         """
         return True
 
     @property
     def host_info(self):
         """
-        :returns: A dictionary with information about the application hosting this engine.
+        :returns: A dictionary with information about the application hosting 
+                  his engine.
 
         The returned dictionary is of the following form on success:
 
@@ -295,10 +318,10 @@ class SubstancePainterEngine(Engine):
             pass
         return host_info
 
-    def init_engine(self):
-        self.logger.debug("init_engine. deprecated")
-
     def process_request(self, method, **kwargs):
+        """
+        This method takes care of requests from the dcc app.
+        """
         self.logger.info("process_request. method: %s | kwargs: %s" % (method, kwargs))
         if method == "DISPLAY_MENU":
             self.logger.info("Retrieving clicked position...")
@@ -333,18 +356,22 @@ class SubstancePainterEngine(Engine):
 
 
     def pre_app_init(self):
-        self.logger.debug("pre_app_init")
         """
         Initializes the Substance Painter engine.
         """
+
         self.logger.debug("%s: Initializing...", self)
 
         self.tk_substancepainter = self.import_module("tk_substancepainter")
         #self._dcc_app = self.tk_substancepainter.application
 
         self.init_qt_app()
-        #self.connection = self._dcc_app.Client(self, parent=self._qt_app)
-        self._dcc_app = self.tk_substancepainter.application.EngineClient(self, parent=self._qt_app)
+
+        port = os.environ['SGTK_SUBSTANCEPAINTER_ENGINE_PORT']
+        url = "ws://localhost:%s" % port
+
+        engine_client_class = self.tk_substancepainter.application.EngineClient
+        self._dcc_app = engine_client_class(self, parent=self._qt_app, url=url)
 
         # check that we are running an ok version of Substance Painter
         current_os = sys.platform
@@ -402,7 +429,7 @@ class SubstancePainterEngine(Engine):
             if show_warning_dlg:
                 # Note, title is padded to try to ensure dialog isn't insanely
                 # narrow!
-                show_info(msg)
+                self.show_warning(msg)
 
             # always log the warning to the script editor:
             self.logger.warning(msg)
@@ -431,29 +458,30 @@ class SubstancePainterEngine(Engine):
         # only create the shotgun menu if not in batch mode and menu doesn't
         # already exist
         if self.has_ui:
-            self.logger.debug("creating shotgun menu...")
+            self.logger.debug("Creating shotgun menu...")
+
             # create our menu handler
             self._menu_generator = self.tk_substancepainter.MenuGenerator(
                 self, self._menu_name)
+
             self._qt_app.setActiveWindow(self._menu_generator.menu_handle)
             self._menu_generator.create_menu(disabled=disabled)
-            self.logger.debug("creating shotgun menu. Done : %s" % self._menu_generator)
+            self.logger.debug("Done : %s" % self._menu_generator)
             return True
 
         return False
 
     def display_menu(self, pos=None):
+        """
+        Shows the engine Shotgun menu.
+        """
         if self._menu_generator:
             self._menu_generator.show(pos)
 
-    def hide_menu(self):
-        if self._menu_generator:
-            self._menu_generator.show()
-            self._menu_generator.hide()
-
     def init_qt_app(self):
-        self.logger.debug("Initializing QtApp for Substance Painter...")
-
+        """
+        Initializes if not done already the QT Application for the engine.
+        """
         from sgtk.platform.qt5 import QtWidgets, QtGui
         
         if not QtWidgets.QApplication.instance():
@@ -470,8 +498,6 @@ class SubstancePainterEngine(Engine):
     
         else:
             self._qt_app = QtWidgets.QApplication.instance()
-        self.logger.debug("Initializing QtApp for Substance Painter. Done")
-
 
     def post_app_init(self):
         """
@@ -483,49 +509,25 @@ class SubstancePainterEngine(Engine):
         self.__register_reload_command()
 
         # Run a series of app instance commands at startup.
-        #self._run_app_instance_commands()
+        self._run_app_instance_commands()
     
         # Create the shotgun menu
         self.create_shotgun_menu()
 
-        # - - - - - Hack on - - - - - 
-        # this is the most bizarre case I've seen witn a QMenu not showing up.
-        # for some reason if I do not show the QMenu here at least
-        # once, it does not show ever after when the sg button is presed in
-        # Substance Painter.
-        # So the current hack is to show the menu and hide it after. Since I 
-        # have spent way too much time on it trying to figure out the 
-        # reason without any luck, I decided to leave it as is for now
-        # and move on.
-        # self.hide_menu()
-        # - - - - - Hack off - - - - - 
-
+        # Let the app know we are ready for action!
         self._dcc_app.broadcast_event("ENGINE_READY")
 
-        # initalize qt loop
-
+        # make sure we setup this engine as the current engine for the platform
         tank.platform.engine.set_current_engine(self)
 
+        # initalize qt loop
         self._qt_app.exec_()
-        # from sgtk.platform.qt5 import QtWidgets, QtGui, QtCore
-
-        # timer = QtCore.QTimer(
-        #     parent=QtCore.QCoreApplication.instance(),
-        # )
-
-        # timer.timeout.connect(self._check_connection)
-
-        # timer.start(
-        #     self.SHOTGUN_SUBSTANCEPAINTER_HEARTBEAT_INTERVAL * 1000.0,
-        # )
-
-    def _check_connection(self):
-        QtCore.QCoreApplication.instance().processEvents()
 
     def post_context_change(self, old_context, new_context):
         """
-        Runs after a context change. The Substance Painter event watching will be stopped
-        and new callbacks registered containing the new context information.
+        Runs after a context change. The Substance Painter event watching will 
+        be stopped and new callbacks registered containing the new context 
+        information.
 
         :param old_context: The context being changed away from.
         :param new_context: The new context being changed to.
@@ -629,7 +631,7 @@ class SubstancePainterEngine(Engine):
 
     def _emit_log_message(self, handler, record):
         """
-        Called by the engine to log messages in Substance Painter script editor.
+        Called by the engine to log messages.
         All log messages from the toolkit logging namespace will be passed to
         this method.
 

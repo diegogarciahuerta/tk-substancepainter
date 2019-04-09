@@ -178,7 +178,7 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
             item.context_change_allowed = False
 
         self.logger.info(
-            "Substance Painter '%s' plugin accepted the current Substance Painter textures."
+            "Substance Painter '%s' plugin accepted to publish textures."
             % (self.name,)
         )
         return {"accepted": True, "checked": True}

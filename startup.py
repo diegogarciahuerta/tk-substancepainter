@@ -12,6 +12,7 @@ import os
 import sys
 import shutil
 import hashlib
+import socket
 
 import sgtk
 from sgtk.platform import SoftwareLauncher, SoftwareVersion, LaunchInformation
@@ -36,7 +37,7 @@ def get_file_info(filename, info):
     size = windll.version.GetFileVersionInfoSizeA(filename, None)
     # If no info in file -> empty string
     if not size:
-        return ''
+        return ""
 
     # Create buffer
     res = create_string_buffer(size)
@@ -45,19 +46,26 @@ def get_file_info(filename, info):
     r = c_uint()
     l = c_uint()
     # Look for codepages
-    windll.version.VerQueryValueA(res, '\\VarFileInfo\\Translation',
-                                  byref(r), byref(l))
+    windll.version.VerQueryValueA(
+        res, "\\VarFileInfo\\Translation", byref(r), byref(l)
+    )
     # If no codepage -> empty string
     if not l.value:
-        return ''
+        return ""
 
     # Take the first codepage (what else ?)
-    codepages = array.array('H', string_at(r.value, l.value))
+    codepages = array.array("H", string_at(r.value, l.value))
     codepage = tuple(codepages[:2].tolist())
-    
+
     # Extract information
-    windll.version.VerQueryValueA(res, ('\\StringFileInfo\\%04x%04x\\'+ info) % codepage, byref(r), byref(l))
+    windll.version.VerQueryValueA(
+        res,
+        ("\\StringFileInfo\\%04x%04x\\" + info) % codepage,
+        byref(r),
+        byref(l),
+    )
     return string_at(r.value, l.value)
+
 
 def md5(fname):
     hash_md5 = hashlib.md5()
@@ -66,8 +74,10 @@ def md5(fname):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+
 def samefile(file1, file2):
     return md5(file1) == md5(file2)
+
 
 # based on:
 # https://stackoverflow.com/questions/38876945/copying-and-merging-directories-excluding-certain-extensions
@@ -119,13 +129,24 @@ def copytree_multi(src, dst, symlinks=False, ignore=None):
     if errors:
         raise shutil.Error(errors)
 
+
 def ensure_scripts_up_to_date(engine_scripts_path, scripts_folder):
     logger.info("Updating scripts...: %s" % engine_scripts_path)
     logger.info("                     scripts_folder: %s" % scripts_folder)
 
-    copytree_multi(engine_scripts_path , scripts_folder)
+    copytree_multi(engine_scripts_path, scripts_folder)
 
     return True
+
+
+def get_free_port():
+    # Ask the OS to allocate a port.
+    sock = socket.socket()
+    sock.bind(("127.0.0.1", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+    return port
+
 
 class SubstancePainterLauncher(SoftwareLauncher):
     """
@@ -150,15 +171,11 @@ class SubstancePainterLauncher(SoftwareLauncher):
     # with an appropriate glob or regex string.
 
     EXECUTABLE_TEMPLATES = {
-        "darwin": [
-            "/Applications/Allegorithmic/Substance Painter.app",
-        ],
+        "darwin": ["/Applications/Allegorithmic/Substance Painter.app"],
         "win32": [
-            "C:/Program Files/Allegorithmic/Substance Painter/Substance Painter.exe",
+            "C:/Program Files/Allegorithmic/Substance Painter/Substance Painter.exe"
         ],
-        "linux2": [
-            "/usr/Allegorithmic/Substance Painter",
-        ]
+        "linux2": ["/usr/Allegorithmic/Substance Painter"],
     }
 
     @property
@@ -181,20 +198,35 @@ class SubstancePainterLauncher(SoftwareLauncher):
         """
         required_env = {}
 
-        resources_plugins_path = os.path.join(self.disk_location, "resources", "plugins")
+        resources_plugins_path = os.path.join(
+            self.disk_location, "resources", "plugins"
+        )
 
         # Run the engine's init.py file when SubstancePainter starts up
         # TODO, maybe start engine here
-        startup_path = os.path.join(self.disk_location, "startup", "bootstrap.py")
+        startup_path = os.path.join(
+            self.disk_location, "startup", "bootstrap.py"
+        )
 
         # Prepare the launch environment with variables required by the
         # classic bootstrap approach.
         self.logger.debug(
-            "Preparing SubstancePainter Launch via Toolkit Classic methodology ...")
-        required_env["SGTK_SUBSTANCEPAINTER_ENGINE_STARTUP"] = startup_path.replace("\\", "/")
-        required_env["SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON"] = sys.executable.replace("\\", "/")
-        required_env["SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH"] = sgtk.get_sgtk_module_path() 
+            "Preparing SubstancePainter Launch via Toolkit Classic methodology ..."
+        )
 
+        required_env[
+            "SGTK_SUBSTANCEPAINTER_ENGINE_STARTUP"
+        ] = startup_path.replace("\\", "/")
+
+        required_env[
+            "SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON"
+        ] = sys.executable.replace("\\", "/")
+
+        required_env[
+            "SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH"
+        ] = sgtk.get_sgtk_module_path()
+
+        required_env["SGTK_SUBSTANCEPAINTER_ENGINE_PORT"] = str(get_free_port())
 
         if file_to_open:
             # Add the file name to open to the launch environment
@@ -206,22 +238,24 @@ class SubstancePainterLauncher(SoftwareLauncher):
         # The reason why this works is because inside substance painter the original file is
         # used with an URL, ie. //file/serve/filename, so we add to the URL using & to pass
         # our now fake environment variables.
-        # Only the startup script, the location of python and potentially the file to open 
+        # Only the startup script, the location of python and potentially the file to open
         # are needed.
-        args = "" 
-        args = ['%s=%s' % (k, v) for k, v in required_env.iteritems()]
+        args = ""
+        args = ["%s=%s" % (k, v) for k, v in required_env.iteritems()]
         args = '"&%s"' % "&".join(args)
         logger.info("running %s" % args)
-        
+
         required_env["SGTK_ENGINE"] = self.engine_name
         required_env["SGTK_CONTEXT"] = sgtk.context.serialize(self.context)
 
         # ensure scripts are up to date on the substance painter side
-        user_scripts_path = r"C:\Users\diego\Documents\Allegorithmic\Substance Painter\plugins"
+        user_scripts_path = (
+            r"C:\Users\diego\Documents\Allegorithmic\Substance Painter\plugins"
+        )
 
         ensure_scripts_up_to_date(resources_plugins_path, user_scripts_path)
 
-        #args = '&SGTK_SUBSTANCEPAINTER_ENGINE_STARTUP=%s;SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON=%s' % (startup_path, sys.executable)
+        # args = '&SGTK_SUBSTANCEPAINTER_ENGINE_STARTUP=%s;SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON=%s' % (startup_path, sys.executable)
         return LaunchInformation(exec_path, args, required_env)
 
     def _icon_from_engine(self):
@@ -251,8 +285,8 @@ class SubstancePainterLauncher(SoftwareLauncher):
                 supported_sw_versions.append(sw_version)
             else:
                 self.logger.debug(
-                    "SoftwareVersion %s is not supported: %s" %
-                    (sw_version, reason)
+                    "SoftwareVersion %s is not supported: %s"
+                    % (sw_version, reason)
                 )
 
         return supported_sw_versions
@@ -273,8 +307,7 @@ class SubstancePainterLauncher(SoftwareLauncher):
             self.logger.debug("Processing template %s.", executable_template)
 
             executable_matches = self._glob_and_match(
-                executable_template,
-                self.COMPONENT_REGEX_LOOKUP
+                executable_template, self.COMPONENT_REGEX_LOOKUP
             )
 
             # Extract all products from that executable.
@@ -283,19 +316,25 @@ class SubstancePainterLauncher(SoftwareLauncher):
                 # extract the matched keys form the key_dict (default to None
                 # if not included)
                 if sys.platform == "win32":
-                    executable_version = get_file_info(executable_path, 'FileVersion')
+                    executable_version = get_file_info(
+                        executable_path, "FileVersion"
+                    )
                     # make sure we remove those pesky \x00 characters
-                    executable_version = executable_version.strip('\x00')
+                    executable_version = executable_version.strip("\x00")
                 else:
                     executable_version = key_dict.get("version", "2018.0.0")
 
-                self.logger.debug("Software found: %s | %s.", executable_version, executable_template)
+                self.logger.debug(
+                    "Software found: %s | %s.",
+                    executable_version,
+                    executable_template,
+                )
                 sw_versions.append(
                     SoftwareVersion(
                         executable_version,
                         "Substance Painter",
                         executable_path,
-                        self._icon_from_engine()
+                        self._icon_from_engine(),
                     )
                 )
 

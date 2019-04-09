@@ -1,3 +1,11 @@
+// Substance Painter menu in the toolbar.
+// We track is the engine has been loaded and enable/diable the Shotgun icon
+// accordingly.
+
+// __author__ = "Diego Garcia Huerta"
+// __email__ = "diegogh2000@gmail.com"
+
+
 import AlgWidgets.Style 1.0
 import QtQuick 2.7
 import QtQuick.Controls 1.4

@@ -25,32 +25,39 @@ __contact__ = "https://www.linkedin.com/in/diegogh/"
 HookBaseClass = sgtk.get_hook_baseclass()
 
 
-
-publishedfile_type_to_actions = {"Image": ('environment', 'colorlut', 'alpha', 'texture'),
-                                 "Texture": ('environment', 'colorlut', 'alpha', 'texture'),
-                                 "Rendered Image": ('environment', 'colorlut', 'alpha', 'texture'),
-
-                                 "Substance Material Preset": ["preset"],
-                                 "Sppr File": ["preset"],
-
-                                 "PopcornFX" : ["script"],
-                                 "Pkfx File" : ["script"],
-
-                                 "Shader": ["shader"],
-                                 "Glsl File": ["shader"],
-                                 
-                                 "Substance Export Preset": ["export"],
-                                 "Spexp File": ["export"],
-                                 
-                                 "Substance Smart Material": ["smartmaterial"],
-                                 "Spsm File": ["smartmaterial"],
-
-                                 "Substance File": ["basematerial", "alpha", "texture", "filter", "procedural", "generator"],
-                                 "Sbsar File": ["basematerial", "alpha", "texture", "filter", "procedural", "generator"],
-                                 
-                                 "Substance Smart Mask": ["smartmask"],
-                                 "Spmsk File": ["smartmask"],
-                                 }
+publishedfile_type_to_actions = {
+    "Image": ("environment", "colorlut", "alpha", "texture"),
+    "Texture": ("environment", "colorlut", "alpha", "texture"),
+    "Rendered Image": ("environment", "colorlut", "alpha", "texture"),
+    "Substance Material Preset": ["preset"],
+    "Sppr File": ["preset"],
+    "PopcornFX": ["script"],
+    "Pkfx File": ["script"],
+    "Shader": ["shader"],
+    "Glsl File": ["shader"],
+    "Substance Export Preset": ["export"],
+    "Spexp File": ["export"],
+    "Substance Smart Material": ["smartmaterial"],
+    "Spsm File": ["smartmaterial"],
+    "Substance File": [
+        "basematerial",
+        "alpha",
+        "texture",
+        "filter",
+        "procedural",
+        "generator",
+    ],
+    "Sbsar File": [
+        "basematerial",
+        "alpha",
+        "texture",
+        "filter",
+        "procedural",
+        "generator",
+    ],
+    "Substance Smart Mask": ["smartmask"],
+    "Spmsk File": ["smartmask"],
+}
 
 
 class SubstancePainterActions(HookBaseClass):
@@ -112,11 +119,13 @@ class SubstancePainterActions(HookBaseClass):
             % (ui_area, actions, sg_publish_data)
         )
 
-        published_file_type = sg_publish_data['published_file_type']['name']
+        published_file_type = sg_publish_data["published_file_type"]["name"]
         app.log_debug("published_file_type: %s" % published_file_type)
 
         # check Published File Type Name:
-        available_actions = publishedfile_type_to_actions.get(published_file_type)
+        available_actions = publishedfile_type_to_actions.get(
+            published_file_type
+        )
 
         action_instances = []
 
@@ -128,13 +137,13 @@ class SubstancePainterActions(HookBaseClass):
                         "params": action,
                         "caption": "Import Project Resource as %s" % action,
                         "description": (
-                            "This will import the %s as %s inside the current project." % (published_file_type, action)
+                            "This will import the %s as %s inside the current project."
+                            % (published_file_type, action)
                         ),
                     }
                 )
 
         return action_instances
-
 
     def execute_multiple_actions(self, actions):
         """

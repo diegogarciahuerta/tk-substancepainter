@@ -19,15 +19,22 @@ __author__ = "Diego Garcia Huerta"
 __contact__ = "https://www.linkedin.com/in/diegogh/"
 
 
-
 class SceneOperation(HookClass):
     """
     Hook called to perform an operation with the
     current scene
     """
 
-    def execute(self, operation, file_path, context, parent_action,
-                file_version, read_only, **kwargs):
+    def execute(
+        self,
+        operation,
+        file_path,
+        context,
+        parent_action,
+        file_version,
+        read_only,
+        **kwargs
+    ):
         """
         Main hook entry point
 
@@ -63,16 +70,6 @@ class SceneOperation(HookClass):
         """
         app = self.parent
         engine = sgtk.platform.current_engine()
-
-        app.log_debug("-"*50)
-        app.log_debug("app: %s" % app)
-        app.log_debug("engine: %s" % engine)
-        app.log_debug('operation: %s' % operation)
-        app.log_debug('file_path: %s' % file_path)
-        app.log_debug('context: %s' % context)
-        app.log_debug('parent_action: %s' % parent_action)
-        app.log_debug('file_version: %s' % file_version)
-        app.log_debug('read_only: %s' % read_only)
 
         if operation == "current_path":
             return engine.app.get_current_project_path()

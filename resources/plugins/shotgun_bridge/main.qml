@@ -1,7 +1,10 @@
-// Copyright (C) 2016 Allegorithmic
-//
-// This software may be modified and distributed under the terms
-// of the MIT license.  See the LICENSE file for details.
+// Substance Painter plugin to communicate with it's related Shotgun engine.
+// The idea is to communicate with the engine through websockets since
+// the engine is written in python.
+
+// __author__ = "Diego Garcia Huerta"
+// __email__ = "diegogh2000@gmail.com"
+
 
 import QtQuick 2.2
 import Painter 1.0
@@ -16,36 +19,56 @@ PainterPlugin {
   property var openMenuButton: null
   property bool isEngineLoaded: false
   // property double shotgun_heartbeat_interval: 1.0; 
-  property bool debug: false;
+  property bool debug: true;
 
-  function log_info(message)
+  function log_info(data)
   {
-    alg.log.info("Shotgun engine: " + message.toString());
+    var message = data
+    if (data.hasOwnProperty("message"))
+        message = data.message;
+
+    alg.log.info("Shotgun engine | " + message.toString());
   }
  
-  function log_warning(message)
+  function log_warning(data)
   {
-    alg.log.warning("Shotgun engine: " + message.toString());
+    var message =  data.message ? ("message" in data) : data;
+    alg.log.warning("Shotgun engine | " + message.toString());
   }
  
-  function log_debug(message)
+  function log_debug(data)
   {
+    var message =  data.message ? ("message" in data) : data;
     if (root.debug)
-      alg.log.info("(DEBUG) Shotgun engine: " + message.toString());
+      alg.log.info("(DEBUG) Shotgun engine | " + message.toString());
   }
  
-  function log_error(message)
+  function log_error(data)
   {
-    alg.log.error("Shotgun engine: " + message.toString());
+    var message =  data.message ? ("message" in data) : data;
+    alg.log.error("Shotgun engine | " + message.toString());
   }
  
-  function log_exception(message)
+  function log_exception(data)
   {
-    alg.log.exception("Shotgun engine: " + message.toString());
+    var message =  data.message ? ("message" in data) : data;
+    alg.log.exception("Shotgun engine | " + message.toString());
   }
 
   Component.onCompleted: {
     log_info("onCompleted")
+
+
+    // get the port we have been assigned from sthe startup software launcher
+    var args = Qt.application.arguments[1];
+    var query = getQueryParams(args);
+    var port = query.SGTK_SUBSTANCEPAINTER_ENGINE_PORT;
+
+    log_debug("server onCompleted | port read:" + port);
+
+    server.port = parseInt(port);
+    log_debug("server onCompleted | port:" + server.port);
+    server.listen = true;
 
     openMenuButton = alg.ui.addWidgetToPluginToolBar("menu.qml");
 
@@ -321,10 +344,6 @@ PainterPlugin {
     return false;
   }
 
-  function info(data){
-    return alg.settings.keys(); //StandardPaths.standardLocations(StandardPaths.AppLocalDataLocation)[0]
-  }
-
   function extractThumbnail(data)
   {
       return root.grabToImage(function(result) {result.saveToFile(data.path)});
@@ -404,10 +423,22 @@ PainterPlugin {
     return alg.resources.documentResources();
   }
 
+  function toggleDebugLogging(data)
+  {
+    alg.log.debug("Debug Logging is : " + data.enabled);
+    root.debug = data.enabled;
+    server.debug = data.enabled;
+  }
 
   CommandServer {
     id: server
     Component.onCompleted: {
+      registerCallback("LOG_INFO", log_info);
+      registerCallback("LOG_WARNING", log_warning);
+      registerCallback("LOG_DEBUG", log_debug);
+      registerCallback("LOG_ERROR", log_error);
+      registerCallback("LOG_EXCEPTION", log_exception);
+
       registerCallback("SEND_PROJECT_INFO", sendProjectInfo);
       registerCallback("GET_VERSION", getVersion);
       registerCallback("ENGINE_READY", engineReady);
@@ -428,9 +459,10 @@ PainterPlugin {
       registerCallback("EXPORT_DOCUMENT_MAPS", exportDocumentMaps);
       registerCallback("UPDATE_DOCUMENT_RESOURCES", updateDocumentResources);
       registerCallback("DOCUMENT_RESOURCES", documentResources);
-
-      registerCallback("INFO", info);
+      registerCallback("TOGGLE_DEBUG_LOGGING", toggleDebugLogging);
+      
       //checkConnectionTimer.start();
+
     }
 
     onConnectedChanged: {

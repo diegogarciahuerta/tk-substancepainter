@@ -1,3 +1,11 @@
+// Based on the dcc-live-link plugin CommandsServer
+// The communication is more similar to rpc json than what it was it that
+// plugin example.
+
+// __author__ = "Diego Garcia Huerta"
+// __email__ = "diegogh2000@gmail.com"
+
+
 import Painter 1.0
 import QtQuick 2.7
 import QtWebSockets 1.0
@@ -59,9 +67,9 @@ Item {
     try {
           m_id +=1;
           var jsonData = {"jsonrpc": "2.0",
-                      "method": command,
-                      "params": data,
-                      "id": m_id};
+                          "method": command,
+                          "params": data,
+                          "id": m_id};
 
       log_debug("Sending:" + JSON.stringify(jsonData));
       server.currentWebSocket.sendTextMessage(JSON.stringify(jsonData));
@@ -98,7 +106,7 @@ Item {
   WebSocketServer {
     id: server
 
-    listen: true
+    listen: false
     port: 12345
     property var currentWebSocket: null
     name: "Substance Painter Bridge"
@@ -122,11 +130,6 @@ Item {
         // Try to retrieve command and json data
         var command, jsonData, message_id;
         try {
-          //var separator = message.indexOf(" ");
-          // var jsonString = message.substring(separator + 1, message.length);
-          //jsonData = JSON.parse(jsonString);
-          //command = message.substring(0, separator).toUpperCase();
-          
           jsonData = JSON.parse(message);
           message_id = jsonData.id
           command = jsonData.method.toUpperCase(); 

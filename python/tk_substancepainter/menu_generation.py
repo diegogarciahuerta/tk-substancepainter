@@ -32,7 +32,6 @@ class MenuGenerator(object):
 
     def __init__(self, engine, menu_name):
         self._engine = engine
-        self._engine.logger.debug("creating new shotgun menu")
         self._menu_name = menu_name
         self._dialogs = []
         
@@ -48,7 +47,6 @@ class MenuGenerator(object):
         self.menu_handle.hide()
 
     def show(self, pos=None):
-        self._engine.logger.debug("show menu")
         pos = QtGui.QCursor.pos() if pos is None else QtCore.QPoint(pos[0],
                                                                     pos[1]) 
         qApp = QtWidgets.QApplication.instance()
@@ -80,8 +78,6 @@ class MenuGenerator(object):
         # now enumerate all items and create menu objects for them
         menu_items = []
         for (cmd_name, cmd_details) in self._engine.commands.items():
-            self._engine.log_debug("engine command: %s : %s" %
-                                   (cmd_name, cmd_details))
             menu_items.append(AppCommand(cmd_name, self, cmd_details))
 
         # sort list of commands in name order

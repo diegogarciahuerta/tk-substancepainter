@@ -115,7 +115,9 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
         """
 
         # inherit the settings from the base publish plugin
-        base_settings = super(SubstancePainterSessionPublishPlugin, self).settings or {}
+        base_settings = (
+            super(SubstancePainterSessionPublishPlugin, self).settings or {}
+        )
 
         # settings specific to this class
         substancepainter_publish_settings = {
@@ -188,7 +190,7 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
             )
 
         self.logger.info(
-            "Substance Painter '%s' plugin accepted the current Substance Painter session."
+            "Substance Painter '%s' plugin accepted the current session."
             % (self.name,)
         )
         return {"accepted": True, "checked": True}
@@ -236,7 +238,7 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
                     extra={
                         "action_button": {
                             "label": "Save File",
-                            "tooltip": "Save the current Substance Painter session to a "
+                            "tooltip": "Save the current session to a "
                             "different file name",
                             # will launch wf2 if configured
                             "callback": _get_save_as_action(),
@@ -325,9 +327,12 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
         ] = _substancepainter_find_additional_session_dependencies()
 
         # let the base class register the publish
-        super(SubstancePainterSessionPublishPlugin, self).publish(settings, item)
-        item.properties.sg_publish_path = item.properties.sg_publish_data['path']['local_path']
-        
+        super(SubstancePainterSessionPublishPlugin, self).publish(
+            settings, item
+        )
+        item.properties.sg_publish_path = item.properties.sg_publish_data[
+            "path"
+        ]["local_path"]
 
     def finalize(self, settings, item):
         """
@@ -341,7 +346,9 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
         """
 
         # do the base class finalization
-        super(SubstancePainterSessionPublishPlugin, self).finalize(settings, item)
+        super(SubstancePainterSessionPublishPlugin, self).finalize(
+            settings, item
+        )
 
         # bump the session file to the next version
         self._save_to_next_version(item.properties["path"], item, _save_session)
@@ -412,4 +419,3 @@ def _get_save_as_action():
 def _save_as():
     engine = sgtk.platform.current_engine()
     engine.save_project_as_action()
-

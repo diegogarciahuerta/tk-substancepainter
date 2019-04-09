@@ -18,7 +18,6 @@ __author__ = "Diego Garcia Huerta"
 __contact__ = "https://www.linkedin.com/in/diegogh/"
 
 
-
 class SceneOperation(HookClass):
     """
     Hook called to perform an operation with the
@@ -43,12 +42,6 @@ class SceneOperation(HookClass):
         """
         app = self.parent
         engine = sgtk.platform.current_engine()
-
-        app.log_debug("-"*50)
-        app.log_debug("app: %s" % app)
-        app.log_debug("engine: %s" % engine)
-        app.log_debug('operation: %s' % operation)
-        app.log_debug('file_path: %s' % file_path)
 
         if operation == "current_path":
             return engine.app.get_current_project_path()

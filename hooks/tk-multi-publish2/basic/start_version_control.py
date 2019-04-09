@@ -23,8 +23,8 @@ HookBaseClass = sgtk.get_hook_baseclass()
 
 class SubstancePainterStartVersionControlPlugin(HookBaseClass):
     """
-    Simple plugin to insert a version number into the Substance Painter file path if one
-    does not exist.
+    Simple plugin to insert a version number into the Substance Painter file 
+    path if one does not exist.
     """
 
     @property
@@ -149,7 +149,8 @@ class SubstancePainterStartVersionControlPlugin(HookBaseClass):
             )
 
         self.logger.info(
-            "Substance Painter '%s' plugin accepted the current session." % (self.name,),
+            "Substance Painter '%s' plugin accepted the current session."
+            % (self.name,),
             extra=_get_version_docs_action(),
         )
 
