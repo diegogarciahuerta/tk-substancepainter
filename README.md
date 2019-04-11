@@ -26,7 +26,7 @@ With the engine, hooks for most of the standard tk application are provided:
 **Note(s) for developers:**The communication between the engine written in python and substance painter is done through QtWebsockets implementation in QML and in PySide2. PySide2 is borrowed from the the shotgun [tk-framework-unrealqt](https://github.com/ue4plugins/tk-framework-unrealqt) framework.
 
 
-**This engine has been developed and tested in Windows using version 2018.3.1. Linux and Mac users might be out of luck for now as Substance Painter for those platforms does not provide a reliable way to figure out what version of the software is installed.**
+**This engine has been developed and tested in Windows using version 2018.3.1. Linux and Mac users might be out of luck for now for sevral reasons, ie. Substance Painter for those platforms does not provide a reliable way to figure out what version of the software is installed, and Pyside2 unrealqt framework is not available for those platforms either.**
 
 
 ## Engine Installation
