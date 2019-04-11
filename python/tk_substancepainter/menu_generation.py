@@ -27,7 +27,7 @@ from tank.platform.qt5 import QtWidgets, QtGui, QtCore, QtWebSockets, QtNetwork
 
 class MenuGenerator(object):
     """
-    Menu generation functionality for Maya
+    Menu generation functionality.
     """
 
     def __init__(self, engine, menu_name):
