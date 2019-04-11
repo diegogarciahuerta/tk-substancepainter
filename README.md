@@ -186,6 +186,8 @@ This application forms the basis for file management in the Shotgun Pipeline Too
 
 Basic hooks have been implemented for this tk-app to work. open, save, save_as, reset, and current_path are the scene operations implemented.
 
+Note that "New file" does not actually create a new substance painter project, just changes the context. Unfortunately the dialog to create a new project is not accesible through code, so could not be automated without loosing functionality. The user is responsible for creating a new project as normal in substance painter after "New File" is clicked.  
+
 ## [tk-multi-snapshot](https://support.shotgunsoftware.com/hc/en-us/articles/219033068)
 A Shotgun Snapshot is a quick incremental backup that lets you version and manage increments of your work without sharing it with anyone else. Take a Snapshot, add a description and a thumbnail, and you create a point in time to which you can always go back to at a later point and restore. This is useful if you are making big changes and want to make sure you have a backup of previous versions of your scene.
 
@@ -215,6 +217,8 @@ Hook provided support the updating of the following type of files and their rela
 - Substance Smart Mask: (smartmask)
 - Spmsk File: (smartmask)
 
+Note that the Loader always loas the textures within the Project shelf resources folder.
+
 ## [tk-multi-publish2](https://support.shotgunsoftware.com/hc/en-us/articles/115000097513)
 ![tk-substancepainter_screenshot03](config/images/tk-substancepainter_screenshot03.PNG)
 
@@ -239,6 +243,8 @@ settings.tk-multi-publish2.substancepainter.asset_step:
 The Scene Breakdown App shows you a list of items you have loaded (referenced) in your scene and tells you which ones are out of date. From this overview, you can select multiple objects and click the update button which will update all your selected items to use the latest published version.
 
 Note that this tool will only update the resources that have been loaded previously trough the Loader toolkit app.
+
+It also displays what textures loaded from the Loader app are in used within the scene and which ones are not. The tidying up of the shelf resources is left for the user.
 
 Finally, for completion, I've kept the original README from shotgun, that include very valuable links:
 

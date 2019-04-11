@@ -25,6 +25,7 @@ import tank
 from tank.log import LogManager
 from tank.platform import Engine
 from tank.platform.constants import SHOTGUN_ENGINE_NAME
+from tank.platform.constants import TANK_ENGINE_INIT_HOOK_NAME
 
 
 __author__ = "Diego Garcia Huerta"
@@ -37,7 +38,6 @@ SHOW_COMP_DLG = "SGTK_COMPATIBILITY_DIALOG_SHOWN"
 
 
 # logging functionality
-
 def display_error(msg):
     t = time.asctime(time.localtime())
     print("%s - Shotgun Error | Substance Painter engine | %s " % (t, msg))
@@ -50,7 +50,6 @@ def display_warning(msg):
 def display_info(msg):
     t = time.asctime(time.localtime())
     print("%s - Shotgun Info | Substance Painter engine | %s " % (t, msg))
-
 
 def display_debug(msg):
     if os.environ.get("TK_DEBUG") == "1":
@@ -78,7 +77,7 @@ def refresh_engine(scene_name, prev_context):
 
     # This is a File->New call, so we just leave the engine in the current
     # context and move on.
-    if scene_name == "Untitled.spp":
+    if scene_name in ("", "Untitled.spp"):
         if prev_context and prev_context != engine.context:
             engine.change_context(prev_context)
 
@@ -140,10 +139,6 @@ class SubstancePainterEngine(Engine):
     Toolkit engine for Substance Painter.
     """
 
-    SHOTGUN_SUBSTANCEPAINTER_HEARTBEAT_INTERVAL = os.environ.get(
-        "SHOTGUN_SUBSTANCEPAINTER_HEARTBEAT_INTERVAL", 1
-    )
-
     def __init__(self, *args, **kwargs):
         """
         Engine Constructor
@@ -166,13 +161,13 @@ class SubstancePainterEngine(Engine):
         Displays a dialog with the message according to  the severity level
         specified.
         """
-        if self.qt_app_central_widget:
+        if self._qt_app_central_widget:
             from sgtk.platform.qt5 import QtWidgets, QtGui, QtCore
             level_icon = {"info": QtWidgets.QMessageBox.Information, 
                           "error": QtWidgets.QMessageBox.Critical,
                           "warning": QtWidgets.QMessageBox.Warning}
 
-            dlg = QtWidgets.QMessageBox(self.qt_app_central_widget)
+            dlg = QtWidgets.QMessageBox(self._qt_app_central_widget)
             dlg.setIcon(level_icon[level])
             dlg.setText(msg)
             dlg.setWindowTitle("Shotgun Substance Painter Engine")
@@ -323,23 +318,14 @@ class SubstancePainterEngine(Engine):
         This method takes care of requests from the dcc app.
         """
         self.logger.info("process_request. method: %s | kwargs: %s" % (method, kwargs))
+        
         if method == "DISPLAY_MENU":
-            self.logger.info("Retrieving clicked position...")
-
             menu_position = None
             clicked_info = kwargs.get('clickedPosition')
-
             if clicked_info:
-                self.logger.info("clicked_info : %s" % clicked_info)
-                self.logger.info("clicked_info x: %s" % clicked_info['x'])
-                self.logger.info("clicked_info y: %s" % clicked_info['y'])
                 menu_position = [clicked_info['x'], clicked_info['y']]
 
-                self.logger.info("Menu position: %s" % menu_position)
-            
-            self.logger.info("Calling self.display_menu...")
             self.display_menu(pos=menu_position)
-            self.logger.info("Calling self.display_menu...Done.")
         
         if method == "NEW_PROJECT_CREATED":
             path = kwargs.get("path")
@@ -363,7 +349,6 @@ class SubstancePainterEngine(Engine):
         self.logger.debug("%s: Initializing...", self)
 
         self.tk_substancepainter = self.import_module("tk_substancepainter")
-        #self._dcc_app = self.tk_substancepainter.application
 
         self.init_qt_app()
 
@@ -375,15 +360,13 @@ class SubstancePainterEngine(Engine):
 
         # check that we are running an ok version of Substance Painter
         current_os = sys.platform
-        if current_os not in ["mac", "win32", "linux64"]:
+        if current_os not in ["darwin", "win32", "linux64"]:
             raise tank.TankError("The current platform is not supported!"
                                  " Supported platforms "
                                  "are Mac, Linux 64 and Windows 64.")
 
 
-        #painter_version_str = "2018.4"
         painter_version_str = self._dcc_app.get_application_version()
-        self.logger.info("Version: %s " % painter_version_str)
         painter_version = float(".".join(painter_version_str.split(".")[:2]))
 
         # default menu name is Shotgun but this can be overriden
@@ -458,15 +441,12 @@ class SubstancePainterEngine(Engine):
         # only create the shotgun menu if not in batch mode and menu doesn't
         # already exist
         if self.has_ui:
-            self.logger.debug("Creating shotgun menu...")
-
             # create our menu handler
             self._menu_generator = self.tk_substancepainter.MenuGenerator(
                 self, self._menu_name)
 
             self._qt_app.setActiveWindow(self._menu_generator.menu_handle)
             self._menu_generator.create_menu(disabled=disabled)
-            self.logger.debug("Done : %s" % self._menu_generator)
             return True
 
         return False
@@ -486,11 +466,11 @@ class SubstancePainterEngine(Engine):
         
         if not QtWidgets.QApplication.instance():
             self._qt_app = QtWidgets.QApplication(sys.argv)
-            self.logger.debug("New QtApp created: %s", self._qt_app)
             self._qt_app.setWindowIcon(QtGui.QIcon(self.icon_256))
-            self.qt_app_main_window = QtWidgets.QMainWindow()
-            self.qt_app_central_widget = QtWidgets.QWidget()
-            self.qt_app_main_window.setCentralWidget(self.qt_app_central_widget)
+
+            self._qt_app_main_window = QtWidgets.QMainWindow()
+            self._qt_app_central_widget = QtWidgets.QWidget()
+            self._qt_app_main_window.setCentralWidget(self._qt_app_central_widget)
             self._qt_app.setQuitOnLastWindowClosed(False)
     
             # Make the QApplication use the dark theme. Must be called after the QApplication is instantiated
@@ -503,7 +483,6 @@ class SubstancePainterEngine(Engine):
         """
         Called when all apps have initialized
         """
-        self.logger.debug("post_app_init")
 
         # for some reason this engine command get's lost so we add it back
         self.__register_reload_command()
@@ -519,6 +498,9 @@ class SubstancePainterEngine(Engine):
 
         # make sure we setup this engine as the current engine for the platform
         tank.platform.engine.set_current_engine(self)
+
+        # emit an engine started event
+        self.sgtk.execute_core_hook(TANK_ENGINE_INIT_HOOK_NAME, engine=self)
 
         # initalize qt loop
         self._qt_app.exec_()
@@ -619,7 +601,7 @@ class SubstancePainterEngine(Engine):
         Get the QWidget parent for all dialogs created through
         show_dialog & show_modal.
         """
-        return self.qt_app_main_window
+        return self._qt_app_main_window
 
 
     @property
