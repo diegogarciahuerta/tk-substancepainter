@@ -2,7 +2,7 @@
 
 Contact : [Diego Garcia Huerta](https://www.linkedin.com/in/diegogh/)
 
-![tk-substancepainter_screenshot04](config/images/tk-substancepainter_screenshot04.PNG)
+![tk-substancepainter_04](config/images/tk-substancepainter_04.PNG)
 
 ## Overview
 
@@ -194,7 +194,7 @@ A Shotgun Snapshot is a quick incremental backup that lets you version and manag
 Hooks are provided to be able to use this tk-app, similar to workfiles2.
 
 ## [tk-multi-loader2](https://support.shotgunsoftware.com/hc/en-us/articles/219033078)
-![tk-substancepainter_screenshot01](config/images/tk-substancepainter_screenshot01.PNG)
+![tk-substancepainter_01](config/images/tk-substancepainter_01.PNG)
 
 The Shotgun Loader lets you quickly overview and browse the files that you have published to Shotgun. A searchable tree view navigation system makes it easy to quickly get to the task, shot or asset that you are looking for and once there the loader shows a thumbnail based overview of all the publishes for that item. Through configurable hooks you can then easily reference or import a publish into your current scene.
 
@@ -220,7 +220,7 @@ Hook provided support the updating of the following type of files and their rela
 Note that the Loader always loas the textures within the Project shelf resources folder.
 
 ## [tk-multi-publish2](https://support.shotgunsoftware.com/hc/en-us/articles/115000097513)
-![tk-substancepainter_screenshot03](config/images/tk-substancepainter_screenshot03.PNG)
+![tk-substancepainter_03](config/images/tk-substancepainter_03.PNG)
 
 The Publish app allows artists to publish their work so that it can be used by artists downstream. It supports traditional publishing workflows within the artist’s content creation software as well as stand-alone publishing of any file on disk. When working in content creation software and using the basic Shotgun integration, the app will automatically discover and display items for the artist to publish. For more sophisticated production needs, studios can write custom publish plugins to drive artist workflows.
 
@@ -238,7 +238,7 @@ settings.tk-multi-publish2.substancepainter.asset_step:
 
 
 ## [tk-multi-breakdown](https://support.shotgunsoftware.com/hc/en-us/articles/219032988)
-![tk-substancepainter_screenshot02](config/images/tk-substancepainter_screenshot02.PNG)
+![tk-substancepainter_02](config/images/tk-substancepainter_02.PNG)
 
 The Scene Breakdown App shows you a list of items you have loaded (referenced) in your scene and tells you which ones are out of date. From this overview, you can select multiple objects and click the update button which will update all your selected items to use the latest published version.
 
