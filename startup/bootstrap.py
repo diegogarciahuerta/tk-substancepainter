@@ -17,32 +17,22 @@ import os
 import sys
 import traceback
 
-import logging
-logname = r"C:/temp/temp.log"
-logging.basicConfig(filename=logname,
-                            filemode='a',
-                            format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                            datefmt='%H:%M:%S',
-                            level=logging.DEBUG)
-logger = logging.getLogger('SP bootstrap')
-logger.info("importing bootstrap...")
-
 
 __author__ = "Diego Garcia Huerta"
 __email__ = "diegogh2000@gmail.com"
 
 
-def display_error(msg):
+def display_error(logger, msg):
     logger.error("Shotgun Error | SubstancePainter engine | %s " % msg)
     print("Shotgun Error | SubstancePainter engine | %s " % msg)
 
 
-def display_warning(msg):
+def display_warning(logger, msg):
     logger.warning("Shotgun Warning | SubstancePainter engine | %s " % msg)
     print("Shotgun Warning | SubstancePainter engine | %s " % msg)
 
 
-def display_info(msg):
+def display_info(logger, msg):
     logger.info("Shotgun Info | SubstancePainter engine | %s " % msg)
     print("Shotgun Info | SubstancePainter engine | %s " % msg)
 
@@ -62,14 +52,14 @@ def start_toolkit_classic():
     env_engine = os.environ.get("SGTK_ENGINE")
     if not env_engine:
         msg = "Shotgun: Missing required environment variable SGTK_ENGINE."
-        display_error(msg)
+        display_error(logger, msg)
         return
 
     # Get the context load from the environment.
     env_context = os.environ.get("SGTK_CONTEXT")
     if not env_context:
         msg = "Shotgun: Missing required environment variable SGTK_CONTEXT."
-        display_error(msg)
+        display_error(logger, msg)
         return
     try:
         # Deserialize the environment context
@@ -79,7 +69,7 @@ def start_toolkit_classic():
                " will be disabled. Details: %s" % e)
         etype, value, tb = sys.exc_info()
         msg += ''.join(traceback.format_exception(etype, value, tb))
-        display_error(msg)
+        display_error(logger, msg)
         return
 
     try:
@@ -93,7 +83,7 @@ def start_toolkit_classic():
         msg = "Shotgun: Could not start engine. Details: %s" % e
         etype, value, tb = sys.exc_info()
         msg += ''.join(traceback.format_exception(etype, value, tb))
-        display_error(msg)
+        display_error(logger, msg)
         return
 
 
@@ -108,7 +98,7 @@ def start_toolkit():
         import sgtk
     except Exception, e:
         msg = "Shotgun: Could not import sgtk! Disabling for now: %s" % e
-        display_error(msg)
+        print(msg)
         return
 
     # start up toolkit logging to file
@@ -121,8 +111,6 @@ def start_toolkit():
     file_to_open = os.environ.get("SGTK_FILE_TO_OPEN")
     if file_to_open:
         msg = "Shotgun: Opening '%s'..." % file_to_open
-        display_info(msg)
-
         # TODO load a project if specified 
         # .App.loadProject(file_to_open)
 
@@ -136,16 +124,13 @@ def start_toolkit():
 
 
 def setup_environment():
-    logger.info("setting up environment")
     SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH = os.environ['SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH']
-    logger.info("SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH: %s" % SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH)
 
     if SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH and SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH not in sys.path:
         sys.path.insert(0, SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH)
+
 
 if __name__ == "__main__":
     # Fire up Toolkit and the environment engine when there's time.
     setup_environment()
     start_toolkit()
-
-logger.info("done.")
