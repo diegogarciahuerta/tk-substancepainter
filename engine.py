@@ -329,7 +329,11 @@ class SubstancePainterEngine(Engine):
         
         if method == "NEW_PROJECT_CREATED":
             path = kwargs.get("path")
-            refresh_engine(path, self.context)
+            change_context = self.get_setting("change_context_on_new_project", False)
+            if change_context:
+                refresh_engine(path, self.context)
+            else:
+                self.logger.info("change_context_on_new_project is off so context won't be changed.")
         
         if method == "PROJECT_OPENED":
             path = kwargs.get("path")

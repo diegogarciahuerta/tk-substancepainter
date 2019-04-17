@@ -24,6 +24,14 @@ configuration:
                      context every time the currently loaded file changes. Defaults to True."
         default_value: True
 
+    change_context_on_new_project:
+        type: bool
+        description: "Controls whether the engine is refreshed and context changed when a new
+                     project is created and the path to the mesh loaded is recognized as a valid context.
+                     By default is turned off, so when a new project is created right after 'New File'
+                     is clicked, the context is preserved."
+        default_value: False
+
     compatibility_dialog_min_version:
         type: int
         description: "Specify the minimum Application major version that will prompt a warning if

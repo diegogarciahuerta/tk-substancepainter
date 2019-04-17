@@ -175,7 +175,9 @@ class SubstancePainterLauncher(SoftwareLauncher):
         "win32": [
             "C:/Program Files/Allegorithmic/Substance Painter/Substance Painter.exe"
         ],
-        "linux2": ["/usr/Allegorithmic/Substance Painter"],
+        "linux2": ["/usr/Allegorithmic/Substance Painter",
+                   "/usr/Allegorithmic/Substance_Painter/Substance Painter",
+                   "/opt/Allegorithmic/Substance_Painter/Substance Painter"],
     }
 
     @property
@@ -250,7 +252,7 @@ class SubstancePainterLauncher(SoftwareLauncher):
 
         # ensure scripts are up to date on the substance painter side
         user_scripts_path = (
-            r"C:\Users\diego\Documents\Allegorithmic\Substance Painter\plugins"
+            os.path.expanduser(r"~/Documents/Allegorithmic/Substance Painter/plugins")
         )
 
         ensure_scripts_up_to_date(resources_plugins_path, user_scripts_path)
