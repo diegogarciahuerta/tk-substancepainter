@@ -358,7 +358,7 @@ class SubstancePainterEngine(Engine):
 
         port = os.environ['SGTK_SUBSTANCEPAINTER_ENGINE_PORT']
         url = "ws://localhost:%s" % port
-
+    
         engine_client_class = self.tk_substancepainter.application.EngineClient
         self._dcc_app = engine_client_class(self, parent=self._qt_app, url=url)
 
@@ -468,6 +468,7 @@ class SubstancePainterEngine(Engine):
         """
         from sgtk.platform.qt5 import QtWidgets, QtGui
         
+        self.logger.info("Qt loaded from: %s" % QtWidgets)
         if not QtWidgets.QApplication.instance():
             self._qt_app = QtWidgets.QApplication(sys.argv)
             self._qt_app.setWindowIcon(QtGui.QIcon(self.icon_256))

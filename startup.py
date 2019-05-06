@@ -171,7 +171,7 @@ class SubstancePainterLauncher(SoftwareLauncher):
     # with an appropriate glob or regex string.
 
     EXECUTABLE_TEMPLATES = {
-        "darwin": ["/Applications/Allegorithmic/Substance Painter.app"],
+        "darwin": ["/Applications/Substance Painter.app"],
         "win32": [
             "C:/Program Files/Allegorithmic/Substance Painter/Substance Painter.exe"
         ],
@@ -282,7 +282,11 @@ class SubstancePainterLauncher(SoftwareLauncher):
 
         supported_sw_versions = []
         for sw_version in self._find_software():
-            (supported, reason) = self._is_supported(sw_version)
+            supported = False
+            if sys.platform == "win32":
+                (supported, reason) = self._is_supported(sw_version)
+            else:
+                supported = True
             if supported:
                 supported_sw_versions.append(sw_version)
             else:

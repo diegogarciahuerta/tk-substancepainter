@@ -43,6 +43,18 @@ def start_toolkit_classic():
     serialized Context to use to startup Toolkit and
     the tk-substancepainter engine and environment.
     """
+    import logging
+    logger = logging.getLogger('tk-susbtancepainter.bootstrap')
+    hdlr = logging.FileHandler('/var/tmp/tk-susbtancepainter_bootstrap.log')
+    # hdlr = logging.FileHandler('c:/temp/tk-susbtancepainter_bootstrap.log')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr) 
+    logger.setLevel(logging.DEBUG)
+
+    for k,v in os.environ.iteritems():
+        logger.info("%s=%s" % (k, v))
+
     import sgtk
     logger = sgtk.LogManager.get_logger(__name__)
 

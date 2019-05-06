@@ -83,6 +83,8 @@ PainterPlugin
       // we are not in a shotgun toolkit environment, so we bail out as soon as
       // possible
       log_warning("Not in an shotgun toolkit environment so the engine won't be run. Have you launched Substance Painter through the Shotgun Desktop application ?");
+      for (var i in query)
+        log_warning(i.toString());
       return;
     }
 
@@ -149,7 +151,7 @@ PainterPlugin
 
       while (tokens = re.exec(qs))
       {
-          params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+          params[decodeURIComponent(tokens[1]).replace("&",'').replace('"', '')] = decodeURIComponent(tokens[2].replace("&",'').replace('"', ''));
       }
     }
     catch (err) 
@@ -179,8 +181,12 @@ PainterPlugin
     var args = Qt.application.arguments[1];
     var query = getQueryParams(args);
 
-    var sgtk_substancepainter_engine_startup = '"' + query.SGTK_SUBSTANCEPAINTER_ENGINE_STARTUP+ '"'
-    var sgtk_substancepainter_engine_python = '"' + query.SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON + '"'
+    //var sgtk_substancepainter_engine_startup = '"' + query.SGTK_SUBSTANCEPAINTER_ENGINE_STARTUP+ '"'
+    //var sgtk_substancepainter_engine_python = '"' + query.SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON + '"'
+    
+
+    var sgtk_substancepainter_engine_startup = query.SGTK_SUBSTANCEPAINTER_ENGINE_STARTUP
+    var sgtk_substancepainter_engine_python = query.SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON
     
     log_debug("Starting tk-substancepainter engine with params: " + sgtk_substancepainter_engine_python + " " + sgtk_substancepainter_engine_startup)
     alg.subprocess.start(sgtk_substancepainter_engine_python + " " + sgtk_substancepainter_engine_startup, onProcessEndedCallback)
