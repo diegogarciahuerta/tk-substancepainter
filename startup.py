@@ -13,6 +13,10 @@ import sys
 import shutil
 import hashlib
 import socket
+import ctypes.wintypes
+CSIDL_PERSONAL = 5       # My Documents
+SHGFP_TYPE_CURRENT = 0   # Get current My Documents folder, not default value
+##############
 
 import sgtk
 from sgtk.platform import SoftwareLauncher, SoftwareVersion, LaunchInformation
@@ -251,9 +255,11 @@ class SubstancePainterLauncher(SoftwareLauncher):
         required_env["SGTK_CONTEXT"] = sgtk.context.serialize(self.context)
 
         # ensure scripts are up to date on the substance painter side
-        user_scripts_path = (
-            os.path.expanduser(r"~/Documents/Allegorithmic/Substance Painter/plugins")
-        )
+        
+        meh= ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+        ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, meh)
+
+        user_scripts_path = meh.value + '\Allegorithmic\Substance Painter\plugins'
 
         ensure_scripts_up_to_date(resources_plugins_path, user_scripts_path)
 
