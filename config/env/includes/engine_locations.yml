@@ -27,8 +27,11 @@
 
 
 # substancepainter
+# Make sure to check for latest versions of the engine here and update the
+# version section of the git description below accordingly.
+# https://github.com/diegogarciahuerta/tk-substancepainter/releases
 engines.tk-substancepainter.location:
   type: git
   path: https://github.com/diegogarciahuerta/tk-substancepainter
-  version: v1.0.0
+  version: v1.1.1
 
