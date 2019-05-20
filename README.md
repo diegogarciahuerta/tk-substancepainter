@@ -110,6 +110,9 @@ As an example, for the location of the engine, we use a git descriptor that allo
 and add the following changes from this file:
 [engine_locations.yml](config/env/includes/engine_locations.yml)
 
+**Make sure to check for the latest version of the engine** here and use the version number in the version section below:
+[tk-substancepainter releases](https://github.com/diegogarciahuerta/tk-substancepainter/releases)
+
 ```yaml
 # Substance Painter
 engines.tk-substancepainter.location:
