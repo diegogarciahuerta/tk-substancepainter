@@ -255,11 +255,20 @@ class SubstancePainterLauncher(SoftwareLauncher):
         required_env["SGTK_CONTEXT"] = sgtk.context.serialize(self.context)
 
         # ensure scripts are up to date on the substance painter side
-        
-        meh= ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
-        ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, meh)
 
-        user_scripts_path = meh.value + '\Allegorithmic\Substance Painter\plugins'
+        # Platform-specific plug-in paths
+
+        if sys.platform=(win32):
+
+            meh= ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+            ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, meh)
+
+            user_scripts_path = meh.value + '\Allegorithmic\Substance Painter\plugins'
+
+        else:
+            user_scripts_path = (
+                os.path.expanduser(r"~/Documents/Allegorithmic/Substance Painter/plugins")
+            )
 
         ensure_scripts_up_to_date(resources_plugins_path, user_scripts_path)
 
