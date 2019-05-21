@@ -14,6 +14,7 @@ import shutil
 import hashlib
 import socket
 import ctypes.wintypes
+import sys
 CSIDL_PERSONAL = 5       # My Documents
 SHGFP_TYPE_CURRENT = 0   # Get current My Documents folder, not default value
 ##############
