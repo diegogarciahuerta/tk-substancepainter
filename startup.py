@@ -259,7 +259,7 @@ class SubstancePainterLauncher(SoftwareLauncher):
 
         # Platform-specific plug-in paths
 
-        if sys.platform=(win32):
+        if sys.platform == 'win32':
 
             meh= ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
             ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, meh)
