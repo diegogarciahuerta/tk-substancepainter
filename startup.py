@@ -13,10 +13,6 @@ import sys
 import shutil
 import hashlib
 import socket
-import ctypes.wintypes
-import sys
-CSIDL_PERSONAL = 5       # My Documents
-SHGFP_TYPE_CURRENT = 0   # Get current My Documents folder, not default value
 ##############
 
 import sgtk
@@ -37,7 +33,6 @@ def get_file_info(filename, info):
     """
     import array
     from ctypes import windll, create_string_buffer, c_uint, string_at, byref
-
     # Get size needed for buffer (0 if no info)
     size = windll.version.GetFileVersionInfoSizeA(filename, None)
     # If no info in file -> empty string
@@ -260,11 +255,14 @@ class SubstancePainterLauncher(SoftwareLauncher):
         # Platform-specific plug-in paths
 
         if sys.platform == 'win32':
+            import ctypes.wintypes
+            CSIDL_PERSONAL = 5       # My Documents
+            SHGFP_TYPE_CURRENT = 0   # Get current My Documents folder, not default value
 
-            meh= ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
-            ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, meh)
+            path_buffer= ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+            ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, path_buffer)
 
-            user_scripts_path = meh.value + '\Allegorithmic\Substance Painter\plugins'
+            user_scripts_path = path_buffer.value + r"\Allegorithmic\Substance Painter\plugins"
 
         else:
             user_scripts_path = (
