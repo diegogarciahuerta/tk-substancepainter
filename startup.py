@@ -13,6 +13,7 @@ import sys
 import shutil
 import hashlib
 import socket
+##############
 
 import sgtk
 from sgtk.platform import SoftwareLauncher, SoftwareVersion, LaunchInformation
@@ -32,7 +33,6 @@ def get_file_info(filename, info):
     """
     import array
     from ctypes import windll, create_string_buffer, c_uint, string_at, byref
-
     # Get size needed for buffer (0 if no info)
     size = windll.version.GetFileVersionInfoSizeA(filename, None)
     # If no info in file -> empty string
@@ -251,9 +251,23 @@ class SubstancePainterLauncher(SoftwareLauncher):
         required_env["SGTK_CONTEXT"] = sgtk.context.serialize(self.context)
 
         # ensure scripts are up to date on the substance painter side
-        user_scripts_path = (
-            os.path.expanduser(r"~/Documents/Allegorithmic/Substance Painter/plugins")
-        )
+
+        # Platform-specific plug-in paths
+
+        if sys.platform == 'win32':
+            import ctypes.wintypes
+            CSIDL_PERSONAL = 5       # My Documents
+            SHGFP_TYPE_CURRENT = 0   # Get current My Documents folder, not default value
+
+            path_buffer= ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+            ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, path_buffer)
+
+            user_scripts_path = path_buffer.value + r"\Allegorithmic\Substance Painter\plugins"
+
+        else:
+            user_scripts_path = (
+                os.path.expanduser(r"~/Documents/Allegorithmic/Substance Painter/plugins")
+            )
 
         ensure_scripts_up_to_date(resources_plugins_path, user_scripts_path)
 
