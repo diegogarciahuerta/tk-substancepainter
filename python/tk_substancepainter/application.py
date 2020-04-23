@@ -286,9 +286,37 @@ class EngineClient(Client):
         return result
 
     def export_document_maps(self, destination):
+        # This is a trick to wait until the async process of
+        # exporting textures finishes.
+        self.__export_results = None
+
+        def run_once_finished_exporting_maps(**kwargs):
+            self.__export_results = kwargs.get("map_infos", {})
+
+        self.engine.register_event_callback(
+            "EXPORT_FINISHED", run_once_finished_exporting_maps
+        )
+
+        self.log_debug("Starting map export...")
         result = self.send_and_receive(
             "EXPORT_DOCUMENT_MAPS", destination=destination
         )
+
+        while self.__export_results is None:
+            self.log_debug("Waiting for maps to be exported ...")
+            QCoreApplication.processEvents()
+            time.sleep(self.wait_period)
+
+        self.engine.unregister_event_callback(
+            "EXPORT_FINISHED", run_once_finished_exporting_maps
+        )
+
+        result = self.__export_results
+
+        # no need for this variable anymore
+        del self.__export_results
+
+        self.log_debug("Map export ended.")
         return result
 
     def update_document_resources(self, old_url, new_url):

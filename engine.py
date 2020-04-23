@@ -146,6 +146,7 @@ class SubstancePainterEngine(Engine):
         self._qt_app = None
         self._dcc_app = None
         self._menu_generator = None
+        self._event_callbacks = {}
 
         Engine.__init__(self, *args, **kwargs)
 
@@ -344,6 +345,23 @@ class SubstancePainterEngine(Engine):
                 self.destroy_engine()
                 self. _qt_app.quit()
 
+        if method in self._event_callbacks:
+            self.logger.info("About to run callbacks for %s" % method)
+            for fn in self._event_callbacks[method]:
+                self.logger.info("  callback: %s" % fn)
+                fn(**kwargs)
+
+    def register_event_callback(self, event_type, callback_fn):
+        if event_type not in self._event_callbacks:
+            self._event_callbacks[event_type] = []
+        self._event_callbacks[event_type].append(callback_fn)
+
+    def unregister_event_callback(self, event_type, callback_fn):
+        if event_type not in self._event_callbacks:
+            return
+
+        if callback_fn in self._event_callbacks[event_type]:
+            self._event_callbacks[event_type].remove(callback_fn)
 
     def pre_app_init(self):
         """
