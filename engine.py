@@ -18,8 +18,8 @@ import time
 import inspect
 import logging
 import traceback
-
 from functools import wraps
+from distutils.version import LooseVersion 
 
 import tank
 from tank.log import LogManager
@@ -35,6 +35,45 @@ __contact__ = "https://www.linkedin.com/in/diegogh/"
 # env variable that control if to show the compatibility warning dialog
 # when Substance Painter software version is above the tested one.
 SHOW_COMP_DLG = "SGTK_COMPATIBILITY_DIALOG_SHOWN"
+
+MINIMUM_SUPPORTED_VERSION = "2018.3" 
+
+
+
+def to_new_version_system(version):
+    """
+    Converts a version string into a new style version.
+
+    New version system was introduced in version 2020.1, that became
+    version 6.1.0, so we need to do some magic to normalize versions.
+    https://docs.substance3d.com/spdoc/version-2020-1-6-1-0-194216357.html
+
+    The way we support this new version system is to use LooseVersion for
+    version comparisons. We modify the major version if the version is higher 
+    than 2017.1.0 for the version to become in the style of 6.1, by literally
+    subtracting 2014 to the major version component.
+    This leaves us always with a predictable version system:
+        2.6.2  -> 2.6.2 (really old version)
+        2017.1 -> 3.1
+        2018.0 -> 4.0
+        2020.1 -> 6.1 (newer version system starts)
+        6.2    -> 6.2 ...
+
+    2017.1.0 represents the first time the 2k style version was introduced
+    according to:
+    https://docs.substance3d.com/spdoc/all-changes-188973073.html
+
+    Note that this change means that the LooseVersion is good for comparisons 
+    but NEVER for printing, it would simply print the same version as 
+    LooseVersion does not support rebuilding of the version string from it's 
+    components
+    """
+
+    version = LooseVersion(str(version))
+
+    if version >= LooseVersion("2017.1"):
+        version.version[0] -= 2014
+    return version
 
 
 # logging functionality
@@ -369,30 +408,38 @@ class SubstancePainterEngine(Engine):
                                  " Supported platforms "
                                  "are Mac, Linux 64 and Windows 64.")
 
-
-        painter_version_str = self._dcc_app.get_application_version()
-        painter_version = float(".".join(painter_version_str.split(".")[:2]))
-
-        # default menu name is Shotgun but this can be overriden
-        # in the configuration to be Sgtk in case of conflicts
+        # default menu name is Shotgun but this can be overridden
+        # in the configuration to be sgtk in case of conflicts
         self._menu_name = "Shotgun"
         if self.get_setting("use_sgtk_as_menu_name", False):
             self._menu_name = "Sgtk"
 
-        if painter_version < 2018.3:
-            msg = ("Shotgun integration is not compatible with Substance Painter versions"
-                   " older than 2.3.0")
+
+        painter_version_str = self._dcc_app.get_application_version()
+
+        # New version system was introduced in version 2020.1, that became
+        # version 6.1.0, so we need to do some magic to normalize versions.
+        # https://docs.substance3d.com/spdoc/version-2020-1-6-1-0-194216357.html
+        painter_version = to_new_version_system(painter_version_str)        
+        painter_min_supported_version = to_new_version_system(MINIMUM_SUPPORTED_VERSION)
+
+        if painter_version < painter_min_supported_version:
+            msg = (
+                "Shotgun integration is not compatible with Substance Painter versions"
+                " older than %s" % MINIMUM_SUPPORTED_VERSION
+            )
             raise tank.TankError(msg)
 
-        if painter_version > 2018.3:
+        if painter_version > painter_min_supported_version:
             # show a warning that this version of Substance Painter isn't yet fully tested
             # with Shotgun:
-            msg = ("The Shotgun Pipeline Toolkit has not yet been fully "
-                   "tested with Substance Painter %s.  "
-                   "You can continue to use Toolkit but you may experience "
-                   "bugs or instability."
-                   "\n\n"
-                   % (painter_version))
+            msg = (
+                "The Shotgun Pipeline Toolkit has not yet been fully "
+                "tested with Substance Painter %s.  "
+                "You can continue to use Toolkit but you may experience "
+                "bugs or instability."
+                "\n\n" % (painter_version)
+            )
 
             # determine if we should show the compatibility warning dialog:
             show_warning_dlg = self.has_ui and SHOW_COMP_DLG not in os.environ
@@ -401,17 +448,15 @@ class SubstancePainterEngine(Engine):
                 # make sure we only show it once per session
                 os.environ[SHOW_COMP_DLG] = "1"
 
-                # split off the major version number - accomodate complex
-                # version strings and decimals:
-                major_version_number_str = painter_version_str.split(".")[0]
-                if (major_version_number_str and
-                        major_version_number_str.isdigit()):
-                    # check against the compatibility_dialog_min_version
-                    # setting
-                    min_ver = self.get_setting(
-                        "compatibility_dialog_min_version")
-                    if int(major_version_number_str) < min_ver:
-                        show_warning_dlg = False
+                # check against the compatibility_dialog_min_version
+                # setting
+                min_version_str = self.get_setting(
+                    "compatibility_dialog_min_version"
+                )
+
+                min_version = to_new_version_system(min_version_str)
+                if painter_version < min_version:
+                    show_warning_dlg = False
 
             if show_warning_dlg:
                 # Note, title is padded to try to ensure dialog isn't insanely
@@ -421,7 +466,7 @@ class SubstancePainterEngine(Engine):
             # always log the warning to the script editor:
             self.logger.warning(msg)
 
-            # In the case of Windows, we have the possility of locking up if
+            # In the case of Windows, we have the possibility of locking up if
             # we allow the PySide shim to import QtWebEngineWidgets.
             # We can stop that happening here by setting the following
             # environment variable.
@@ -433,7 +478,6 @@ class SubstancePainterEngine(Engine):
                     "SHOTGUN_SKIP_QTWEBENGINEWIDGETS_IMPORT=1..."
                 )
                 os.environ["SHOTGUN_SKIP_QTWEBENGINEWIDGETS_IMPORT"] = "1"
-
 
     def create_shotgun_menu(self, disabled=False):
         """
