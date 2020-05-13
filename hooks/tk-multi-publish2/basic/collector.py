@@ -99,14 +99,10 @@ class SubstancePainterSessionCollector(HookBaseClass):
         """
 
         # create an item representing the current substance painter session
-        item = self.collect_current_substancepainter_session(
-            settings, parent_item
-        )
+        item = self.collect_current_substancepainter_session(settings, parent_item)
 
         if item:
-            publish_as_folder_setting = settings.get(
-                "Publish Textures as Folder"
-            )
+            publish_as_folder_setting = settings.get("Publish Textures as Folder")
             if publish_as_folder_setting and publish_as_folder_setting.value:
                 resource_items = self.collect_textures_as_folder(settings, item)
             else:
@@ -122,16 +118,13 @@ class SubstancePainterSessionCollector(HookBaseClass):
                 work_template_setting.value
             )
 
-            self.logger.debug(
-                "Work template defined for Substance Painter collection."
-            )
+            self.logger.debug("Work template defined for Substance Painter collection.")
 
         work_export_template = None
         work_export_template_setting = settings.get("Work Export Template")
         if work_export_template_setting:
             self.logger.debug(
-                "Work Export template settings: %s"
-                % work_export_template_setting
+                "Work Export template settings: %s" % work_export_template_setting
             )
 
             work_export_template = publisher.engine.get_template_by_name(
@@ -163,8 +156,7 @@ class SubstancePainterSessionCollector(HookBaseClass):
 
         engine.show_busy(
             "Exporting textures",
-            "Texture are being exported so they can "
-            "be published.\n\nPlease wait...",
+            "Texture are being exported so they can " "be published.\n\nPlease wait...",
         )
 
         map_export_info = engine.app.export_document_maps(export_path)
@@ -202,8 +194,7 @@ class SubstancePainterSessionCollector(HookBaseClass):
 
         engine.show_busy(
             "Exporting textures",
-            "Texture are being exported so they can "
-            "be published.\n\nPlease wait...",
+            "Texture are being exported so they can " "be published.\n\nPlease wait...",
         )
 
         map_export_info = engine.app.export_document_maps(export_path)
@@ -211,9 +202,7 @@ class SubstancePainterSessionCollector(HookBaseClass):
 
         self.logger.debug("Collecting exported textures...")
 
-        icon_path = os.path.join(
-            self.disk_location, os.pardir, "icons", "texture.png"
-        )
+        icon_path = os.path.join(self.disk_location, os.pardir, "icons", "texture.png")
 
         for texture_set_name, texture_set in map_export_info.iteritems():
             for texture_id, texture_file in texture_set.iteritems():
@@ -254,15 +243,11 @@ class SubstancePainterSessionCollector(HookBaseClass):
 
         # create the session item for the publish hierarchy
         session_item = parent_item.create_item(
-            "substancepainter.session",
-            "Substance Painter Session",
-            display_name,
+            "substancepainter.session", "Substance Painter Session", display_name,
         )
 
         # get the icon path to display for this item
-        icon_path = os.path.join(
-            self.disk_location, os.pardir, "icons", "session.png"
-        )
+        icon_path = os.path.join(self.disk_location, os.pardir, "icons", "session.png")
         session_item.set_icon_from_path(icon_path)
 
         # if a work template is defined, add it to the item properties so

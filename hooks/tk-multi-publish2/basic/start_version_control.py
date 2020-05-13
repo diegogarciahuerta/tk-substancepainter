@@ -34,9 +34,7 @@ class SubstancePainterStartVersionControlPlugin(HookBaseClass):
         """
 
         # look for icon one level up from this hook's folder in "icons" folder
-        return os.path.join(
-            self.disk_location, os.pardir, "icons", "version_up.png"
-        )
+        return os.path.join(self.disk_location, os.pardir, "icons", "version_up.png")
 
     @property
     def name(self):
@@ -134,9 +132,7 @@ class SubstancePainterStartVersionControlPlugin(HookBaseClass):
                     "Substance Painter '%s' plugin rejected the current session..."
                     % (self.name,)
                 )
-                self.logger.info(
-                    "  There is already a version number in the file..."
-                )
+                self.logger.info("  There is already a version number in the file...")
                 self.logger.info("  Substance Painter file path: %s" % (path,))
                 return {"accepted": False}
         else:
@@ -263,23 +259,17 @@ class SubstancePainterStartVersionControlPlugin(HookBaseClass):
         work_template = item.properties.get("work_template")
         if work_template:
             if work_template.validate(path):
-                self.logger.debug(
-                    "Using work template to determine version number."
-                )
+                self.logger.debug("Using work template to determine version number.")
                 work_fields = work_template.get_fields(path)
                 if "version" in work_fields:
                     version_number = work_fields.get("version")
             else:
                 self.logger.debug("Work template did not match path")
         else:
-            self.logger.debug(
-                "Work template unavailable for version extraction."
-            )
+            self.logger.debug("Work template unavailable for version extraction.")
 
         if version_number is None:
-            self.logger.debug(
-                "Using path info hook to determine version number."
-            )
+            self.logger.debug("Using path info hook to determine version number.")
             version_number = publisher.util.get_version_number(path)
 
         return version_number

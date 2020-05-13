@@ -65,9 +65,7 @@ class Client(QtCore.QObject):
             # self.log_debug("send_and_receive: message %s" % command)
 
             # exit the loop if timeout happens
-            timeout_timer = QtCore.QTimer(
-                parent=QtCore.QCoreApplication.instance()
-            )
+            timeout_timer = QtCore.QTimer(parent=QtCore.QCoreApplication.instance())
 
             loop = QtCore.QEventLoop()
 
@@ -79,9 +77,7 @@ class Client(QtCore.QObject):
                 loop.quit()
 
             # self.log_debug("in the loop...")
-            self.send_text_message(
-                command, callback=await_for_response, **kwargs
-            )
+            self.send_text_message(command, callback=await_for_response, **kwargs)
 
             timeout_timer.timeout.connect(loop.quit)
             timeout_timer.start(5 * 1000.0)
@@ -155,9 +151,7 @@ class Client(QtCore.QObject):
                 self.callbacks[message_id](result)
                 del self.callbacks[message_id]
 
-    def send_text_message(
-        self, command, message_id=None, callback=None, **kwargs
-    ):
+    def send_text_message(self, command, message_id=None, callback=None, **kwargs):
         if self.client.state() in (
             QAbstractSocket.SocketState.ClosingState,
             QAbstractSocket.SocketState.UnconnectedState,
@@ -168,9 +162,7 @@ class Client(QtCore.QObject):
             return
 
         # wait until connected
-        while (
-            self.client.state() == QAbstractSocket.SocketState.ConnectingState
-        ):
+        while self.client.state() == QAbstractSocket.SocketState.ConnectingState:
             QCoreApplication.processEvents()
             # self.log_debug("client: waiting state: %s" % self.client.state())
             time.sleep(self.wait_period)
@@ -183,12 +175,7 @@ class Client(QtCore.QObject):
             self.callbacks[message_id] = callback
 
         message = json.dumps(
-            {
-                "jsonrpc": "2.0",
-                "method": command,
-                "params": kwargs,
-                "id": message_id,
-            }
+            {"jsonrpc": "2.0", "method": command, "params": kwargs, "id": message_id,}
         )
 
         # self.log_debug("client: send_message: %s" % message)
@@ -251,9 +238,7 @@ class EngineClient(Client):
         self.send_text_message(event_name)
 
     def execute(self, statement_str):
-        result = self.send_and_receive(
-            "EXECUTE_STATEMENT", statement=statement_str
-        )
+        result = self.send_and_receive("EXECUTE_STATEMENT", statement=statement_str)
         return result
 
     def extract_thumbnail(self, filename):
@@ -298,9 +283,7 @@ class EngineClient(Client):
         )
 
         self.log_debug("Starting map export...")
-        result = self.send_and_receive(
-            "EXPORT_DOCUMENT_MAPS", destination=destination
-        )
+        result = self.send_and_receive("EXPORT_DOCUMENT_MAPS", destination=destination)
 
         while self.__export_results is None:
             self.log_debug("Waiting for maps to be exported ...")

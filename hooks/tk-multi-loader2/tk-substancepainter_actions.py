@@ -115,17 +115,14 @@ class SubstancePainterActions(HookBaseClass):
         app = self.parent
         app.log_debug(
             "Generate actions called for UI element %s. "
-            "Actions: %s. Publish Data: %s"
-            % (ui_area, actions, sg_publish_data)
+            "Actions: %s. Publish Data: %s" % (ui_area, actions, sg_publish_data)
         )
 
         published_file_type = sg_publish_data["published_file_type"]["name"]
         app.log_debug("published_file_type: %s" % published_file_type)
 
         # check Published File Type Name:
-        available_actions = publishedfile_type_to_actions.get(
-            published_file_type
-        )
+        available_actions = publishedfile_type_to_actions.get(published_file_type)
 
         action_instances = []
 

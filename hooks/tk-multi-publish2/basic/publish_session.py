@@ -42,9 +42,7 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
         contain simple html for formatting.
         """
 
-        loader_url = (
-            "https://support.shotgunsoftware.com/hc/en-us/articles/219033078"
-        )
+        loader_url = "https://support.shotgunsoftware.com/hc/en-us/articles/219033078"
 
         return """
         Publishes the file to Shotgun. A <b>Publish</b> entry will be
@@ -115,9 +113,7 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
         """
 
         # inherit the settings from the base publish plugin
-        base_settings = (
-            super(SubstancePainterSessionPublishPlugin, self).settings or {}
-        )
+        base_settings = super(SubstancePainterSessionPublishPlugin, self).settings or {}
 
         # settings specific to this class
         substancepainter_publish_settings = {
@@ -190,8 +186,7 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
             )
 
         self.logger.info(
-            "Substance Painter '%s' plugin accepted the current session."
-            % (self.name,)
+            "Substance Painter '%s' plugin accepted the current session." % (self.name,)
         )
         return {"accepted": True, "checked": True}
 
@@ -246,9 +241,7 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
                     },
                 )
             else:
-                self.logger.debug(
-                    "Work template configured and matches session file."
-                )
+                self.logger.debug("Work template configured and matches session file.")
         else:
             self.logger.debug("No work template configured.")
 
@@ -327,12 +320,10 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
         ] = _substancepainter_find_additional_session_dependencies()
 
         # let the base class register the publish
-        super(SubstancePainterSessionPublishPlugin, self).publish(
-            settings, item
-        )
-        item.properties.sg_publish_path = item.properties.sg_publish_data[
-            "path"
-        ]["local_path"]
+        super(SubstancePainterSessionPublishPlugin, self).publish(settings, item)
+        item.properties.sg_publish_path = item.properties.sg_publish_data["path"][
+            "local_path"
+        ]
 
     def finalize(self, settings, item):
         """
@@ -346,9 +337,7 @@ class SubstancePainterSessionPublishPlugin(HookBaseClass):
         """
 
         # do the base class finalization
-        super(SubstancePainterSessionPublishPlugin, self).finalize(
-            settings, item
-        )
+        super(SubstancePainterSessionPublishPlugin, self).finalize(settings, item)
 
         # bump the session file to the next version
         self._save_to_next_version(item.properties["path"], item, _save_session)

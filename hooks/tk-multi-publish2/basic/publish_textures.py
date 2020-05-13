@@ -43,9 +43,7 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         contain simple html for formatting.
         """
 
-        loader_url = (
-            "https://support.shotgunsoftware.com/hc/en-us/articles/219033078"
-        )
+        loader_url = "https://support.shotgunsoftware.com/hc/en-us/articles/219033078"
 
         return """
         Publishes the file to Shotgun. A <b>Publish</b> entry will be
@@ -116,7 +114,9 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         """
 
         # inherit the settings from the base publish plugin
-        base_settings = super(SubstancePainterTexturesPublishPlugin, self).settings or {}
+        base_settings = (
+            super(SubstancePainterTexturesPublishPlugin, self).settings or {}
+        )
 
         # settings specific to this class
         substancepainter_publish_settings = {
@@ -199,7 +199,9 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
 
         # populate the publish template on the item if found
         publish_template_setting = settings.get("Publish Template")
-        publish_template = publisher.engine.get_template_by_name(publish_template_setting.value)
+        publish_template = publisher.engine.get_template_by_name(
+            publish_template_setting.value
+        )
         if publish_template:
             item.properties["publish_template"] = publish_template
         else:
@@ -229,7 +231,6 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
 
         return True
 
-
     def publish(self, settings, item):
         """
         Executes the publish logic for the given item and settings.
@@ -243,17 +244,19 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         publisher = self.parent
 
         publish_template = item.properties["publish_template"]
-        publish_type =  item.properties["publish_type"]
+        publish_type = item.properties["publish_type"]
 
         # Get fields from the current context
         fields = {}
         ctx_fields = self.parent.context.as_template_fields(publish_template)
         fields.update(ctx_fields)
 
-        context_entity_type = self.parent.context.entity['type']
+        context_entity_type = self.parent.context.entity["type"]
         publish_name = context_entity_type + "_textures"
 
-        existing_publishes = self._find_publishes(self.parent.context, publish_name, publish_type)
+        existing_publishes = self._find_publishes(
+            self.parent.context, publish_name, publish_type
+        )
         version = max([p["version_number"] for p in existing_publishes] or [0]) + 1
         fields["version"] = version
 
@@ -268,7 +271,7 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         for src in textures:
             _, filenamefile = os.path.split(src)
             dst = os.path.join(publish_path, filenamefile)
-            sgtk.util.filesystem.copy_file(src, dst) 
+            sgtk.util.filesystem.copy_file(src, dst)
 
         self.logger.info("A Publish will be created in Shotgun and linked to:")
         self.logger.info("  %s" % (publish_path,))
@@ -278,7 +281,9 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
         # add dependencies
         dependency_paths = []
         if "sg_publish_path" in item.parent.properties:
-            self.logger.debug("Added dependency: %s" % item.parent.properties.sg_publish_path)
+            self.logger.debug(
+                "Added dependency: %s" % item.parent.properties.sg_publish_path
+            )
             dependency_paths.append(item.parent.properties.sg_publish_path)
 
         self.logger.info("Registering publish...")
@@ -302,15 +307,14 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
                 "action_show_more_info": {
                     "label": "Publish Data",
                     "tooltip": "Show the complete Publish data dictionary",
-                    "text": "<pre>%s</pre>" % (pprint.pformat(publish_data),)
+                    "text": "<pre>%s</pre>" % (pprint.pformat(publish_data),),
                 }
-            }
+            },
         )
 
         # create the publish and stash it in the item properties for other
         # plugins to use.
-        item.properties["sg_publish_data"] = sgtk.util.register_publish(
-            **publish_data)
+        item.properties["sg_publish_data"] = sgtk.util.register_publish(**publish_data)
 
         # inject the publish path such that children can refer to it when
         # updating dependency information
@@ -320,7 +324,6 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
 
         # now that we've published. keep a handle on the path that was published
         item.properties["path"] = publish_path
-
 
     def finalize(self, settings, item):
         """
@@ -353,28 +356,32 @@ class SubstancePainterTexturesPublishPlugin(HookBaseClass):
             publish_type_field = "published_file_type.PublishedFileType.code"
         else:
             publish_type_field = "tank_type.TankType.code"
-        
+
         # construct filters from the context:
         filters = [["project", "is", ctx.project]]
         if ctx.entity:
             filters.append(["entity", "is", ctx.entity])
         if ctx.task:
             filters.append(["task", "is", ctx.task])
-            
+
         # add in name & type:
         if publish_name:
             filters.append(["name", "is", publish_name])
         if publish_type:
             filters.append([publish_type_field, "is", publish_type])
-            
+
         # retrieve a list of all matching publishes from Shotgun:
         sg_publishes = []
         try:
             query_fields = ["version_number"]
-            sg_publishes = self.parent.shotgun.find(publish_entity_type, filters, query_fields)
+            sg_publishes = self.parent.shotgun.find(
+                publish_entity_type, filters, query_fields
+            )
         except Exception, e:
-            self.logger.error("Failed to find publishes of type '%s', called '%s', for context %s: %s" 
-                              % (publish_name, publish_type, ctx, e))
+            self.logger.error(
+                "Failed to find publishes of type '%s', called '%s', for context %s: %s"
+                % (publish_name, publish_type, ctx, e)
+            )
         return sg_publishes
 
 

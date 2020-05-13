@@ -1,11 +1,11 @@
 # Copyright (c) 2013 Shotgun Software Inc.
-# 
+#
 # CONFIDENTIAL AND PROPRIETARY
-# 
-# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit 
+#
+# This work is provided "AS IS" and subject to the Shotgun Pipeline Toolkit
 # Source Code License included in this distribution package. See LICENSE.
-# By accessing, using, copying or modifying this work you indicate your 
-# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights 
+# By accessing, using, copying or modifying this work you indicate your
+# agreement to the Shotgun Pipeline Toolkit Source Code License. All rights
 # not expressly granted therein are reserved by Shotgun Software Inc.
 
 """
@@ -25,6 +25,7 @@ __email__ = "diegogh2000@gmail.com"
 
 from tank.platform.qt5 import QtWidgets, QtGui, QtCore, QtWebSockets, QtNetwork
 
+
 class MenuGenerator(object):
     """
     Menu generation functionality.
@@ -34,7 +35,7 @@ class MenuGenerator(object):
         self._engine = engine
         self._menu_name = menu_name
         self._dialogs = []
-        
+
         self._widget = QtWidgets.QWidget()
         self._handle = QtWidgets.QMenu(self._menu_name, self._widget)
         self._ui_cache = []
@@ -47,15 +48,14 @@ class MenuGenerator(object):
         self.menu_handle.hide()
 
     def show(self, pos=None):
-        pos = QtGui.QCursor.pos() if pos is None else QtCore.QPoint(pos[0],
-                                                                    pos[1]) 
+        pos = QtGui.QCursor.pos() if pos is None else QtCore.QPoint(pos[0], pos[1])
         qApp = QtWidgets.QApplication.instance()
-        #qApp.setWindowState(QtCore.Qt.WindowActive)
+        # qApp.setWindowState(QtCore.Qt.WindowActive)
 
         self.menu_handle.activateWindow()
         self.menu_handle.raise_()
         self.menu_handle.exec_(pos)
-        
+
     def create_menu(self, disabled=False):
         """
         Render the entire Shotgun menu.
@@ -90,8 +90,10 @@ class MenuGenerator(object):
 
             # scan through all menu items
             for cmd in menu_items:
-                if (cmd.get_app_instance_name() == app_instance_name and
-                        cmd.name == menu_name):
+                if (
+                    cmd.get_app_instance_name() == app_instance_name
+                    and cmd.name == menu_name
+                ):
                     # found our match!
                     cmd.add_command_to_menu(self.menu_handle)
                     # mark as a favourite item
@@ -171,8 +173,7 @@ class MenuGenerator(object):
 
         # Add the menu item only when there are some file system locations.
         if ctx.filesystem_locations:
-            self._add_menu_item("Jump to File System",
-                                ctx_menu, self._jump_to_fs)
+            self._add_menu_item("Jump to File System", ctx_menu, self._jump_to_fs)
 
         # divider (apps may register entries below this divider)
         self._add_divider(ctx_menu)
@@ -286,8 +287,9 @@ class AppCommand(object):
             doc_url = app.documentation_url
             # deal with nuke's inability to handle unicode. #fail
             if doc_url.__class__ == unicode:
-                doc_url = unicodedata.normalize(
-                    'NFKD', doc_url).encode('ascii', 'ignore')
+                doc_url = unicodedata.normalize("NFKD", doc_url).encode(
+                    "ascii", "ignore"
+                )
             return doc_url
 
         return None
@@ -315,12 +317,12 @@ class AppCommand(object):
                 # already have sub menu
                 parent_menu = sub_menu
             else:
-                parent_menu = self.parent._add_sub_menu(
-                    item_label, parent_menu)
+                parent_menu = self.parent._add_sub_menu(item_label, parent_menu)
 
         # self._execute_deferred)
-        self.parent._add_menu_item(parts[-1], parent_menu,
-                                   self.callback, self.properties)
+        self.parent._add_menu_item(
+            parts[-1], parent_menu, self.callback, self.properties
+        )
 
     def _find_sub_menu_item(self, menu, label):
         """

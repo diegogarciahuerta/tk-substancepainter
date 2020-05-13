@@ -142,9 +142,7 @@ class BreakdownSceneOperations(HookBaseClass):
                     {
                         "type": "file",
                         "path": ref_path,
-                        "node": SubstancePainterResource(
-                            res_info, in_use, nice_name
-                        ),
+                        "node": SubstancePainterResource(res_info, in_use, nice_name),
                     }
                 )
 
