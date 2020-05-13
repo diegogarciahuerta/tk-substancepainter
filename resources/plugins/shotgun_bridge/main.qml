@@ -467,7 +467,10 @@ PainterPlugin
     var export_preset = alg.mapexport.getProjectExportPreset();
     var export_options = alg.mapexport.getProjectExportOptions();
     var export_path = data.destination;
-    return alg.mapexport.exportDocumentMaps(export_preset, export_path, export_options.fileFormat)
+    server.sendCommand("EXPORT_STARTED", {});
+    var result = alg.mapexport.exportDocumentMaps(export_preset, export_path, export_options.fileFormat)
+    server.sendCommand("EXPORT_FINISHED", {map_infos:result});
+    return true;
   }
 
   function updateDocumentResources(data)
