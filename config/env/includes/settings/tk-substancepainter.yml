@@ -76,5 +76,5 @@ settings.tk-substancepainter.project:
       location: "@apps.tk-multi-pythonconsole.location"
   menu_favourites:
   - {app_instance: tk-multi-workfiles2, name: File Open...}
-  debug_logging: true
   location: "@engines.tk-substancepainter.location"
+  compatibility_dialog_min_version: 2021
