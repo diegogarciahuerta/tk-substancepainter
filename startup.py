@@ -13,6 +13,8 @@ import sys
 import shutil
 import hashlib
 import socket
+from distutils.version import LooseVersion
+
 ##############
 
 import sgtk
@@ -25,6 +27,50 @@ __contact__ = "https://www.linkedin.com/in/diegogh/"
 logger = sgtk.LogManager.get_logger(__name__)
 
 
+# We use this to indicate that we could not retrieve the version for the
+# binary/executable, so we allow the engine to run with it
+UNKNOWN_VERSION = "UNKNOWN_VERSION"
+
+# note that this is the same in engine.py
+MINIMUM_SUPPORTED_VERSION = "2018.3"
+
+
+def to_new_version_system(version):
+    """
+    Converts a version string into a new style version.
+
+    New version system was introduced in version 2020.1, that became
+    version 6.1.0, so we need to do some magic to normalize versions.
+    https://docs.substance3d.com/spdoc/version-2020-1-6-1-0-194216357.html
+
+    The way we support this new version system is to use LooseVersion for
+    version comparisons. We modify the major version if the version is higher 
+    than 2017.1.0 for the version to become in the style of 6.1, by literally
+    subtracting 2014 to the major version component.
+    This leaves us always with a predictable version system:
+        2.6.2  -> 2.6.2 (really old version)
+        2017.1 -> 3.1
+        2018.0 -> 4.0
+        2020.1 -> 6.1 (newer version system starts)
+        6.2    -> 6.2 ...
+
+    2017.1.0 represents the first time the 2k style version was introduced
+    according to:
+    https://docs.substance3d.com/spdoc/all-changes-188973073.html
+
+    Note that this change means that the LooseVersion is good for comparisons 
+    but NEVER for printing, it would simply print the same version as 
+    LooseVersion does not support rebuilding of the version string from it's 
+    components
+    """
+
+    version = LooseVersion(str(version))
+
+    if version >= LooseVersion("2017.1"):
+        version.version[0] -= 2014
+    return version
+
+
 # adapted from:
 # https://stackoverflow.com/questions/2270345/finding-the-version-of-an-application-from-python
 def get_file_info(filename, info):
@@ -33,6 +79,7 @@ def get_file_info(filename, info):
     """
     import array
     from ctypes import windll, create_string_buffer, c_uint, string_at, byref
+
     # Get size needed for buffer (0 if no info)
     size = windll.version.GetFileVersionInfoSizeA(filename, None)
     # If no info in file -> empty string
@@ -46,9 +93,7 @@ def get_file_info(filename, info):
     r = c_uint()
     l = c_uint()
     # Look for codepages
-    windll.version.VerQueryValueA(
-        res, "\\VarFileInfo\\Translation", byref(r), byref(l)
-    )
+    windll.version.VerQueryValueA(res, "\\VarFileInfo\\Translation", byref(r), byref(l))
     # If no codepage -> empty string
     if not l.value:
         return ""
@@ -59,10 +104,7 @@ def get_file_info(filename, info):
 
     # Extract information
     windll.version.VerQueryValueA(
-        res,
-        ("\\StringFileInfo\\%04x%04x\\" + info) % codepage,
-        byref(r),
-        byref(l),
+        res, ("\\StringFileInfo\\%04x%04x\\" + info) % codepage, byref(r), byref(l)
     )
     return string_at(r.value, l.value)
 
@@ -172,12 +214,12 @@ class SubstancePainterLauncher(SoftwareLauncher):
 
     EXECUTABLE_TEMPLATES = {
         "darwin": ["/Applications/Allegorithmic/Substance Painter.app"],
-        "win32": [
-            "C:/Program Files/Allegorithmic/Substance Painter/Substance Painter.exe"
+        "win32": ["C:/Program Files/Allegorithmic/Substance Painter/Substance Painter.exe"],
+        "linux2": [
+            "/usr/Allegorithmic/Substance Painter",
+            "/usr/Allegorithmic/Substance_Painter/Substance Painter",
+            "/opt/Allegorithmic/Substance_Painter/Substance Painter",
         ],
-        "linux2": ["/usr/Allegorithmic/Substance Painter",
-                   "/usr/Allegorithmic/Substance_Painter/Substance Painter",
-                   "/opt/Allegorithmic/Substance_Painter/Substance Painter"],
     }
 
     @property
@@ -185,7 +227,7 @@ class SubstancePainterLauncher(SoftwareLauncher):
         """
         The minimum software version that is supported by the launcher.
         """
-        return "2018.3.1"
+        return MINIMUM_SUPPORTED_VERSION
 
     def prepare_launch(self, exec_path, args, file_to_open=None):
         """
@@ -200,15 +242,11 @@ class SubstancePainterLauncher(SoftwareLauncher):
         """
         required_env = {}
 
-        resources_plugins_path = os.path.join(
-            self.disk_location, "resources", "plugins"
-        )
+        resources_plugins_path = os.path.join(self.disk_location, "resources", "plugins")
 
         # Run the engine's init.py file when SubstancePainter starts up
         # TODO, maybe start engine here
-        startup_path = os.path.join(
-            self.disk_location, "startup", "bootstrap.py"
-        )
+        startup_path = os.path.join(self.disk_location, "startup", "bootstrap.py")
 
         # Prepare the launch environment with variables required by the
         # classic bootstrap approach.
@@ -216,17 +254,11 @@ class SubstancePainterLauncher(SoftwareLauncher):
             "Preparing SubstancePainter Launch via Toolkit Classic methodology ..."
         )
 
-        required_env[
-            "SGTK_SUBSTANCEPAINTER_ENGINE_STARTUP"
-        ] = startup_path.replace("\\", "/")
+        required_env["SGTK_SUBSTANCEPAINTER_ENGINE_STARTUP"] = startup_path.replace("\\", "/")
 
-        required_env[
-            "SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON"
-        ] = sys.executable.replace("\\", "/")
+        required_env["SGTK_SUBSTANCEPAINTER_ENGINE_PYTHON"] = sys.executable.replace("\\", "/")
 
-        required_env[
-            "SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH"
-        ] = sgtk.get_sgtk_module_path()
+        required_env["SGTK_SUBSTANCEPAINTER_SGTK_MODULE_PATH"] = sgtk.get_sgtk_module_path()
 
         required_env["SGTK_SUBSTANCEPAINTER_ENGINE_PORT"] = str(get_free_port())
 
@@ -254,19 +286,22 @@ class SubstancePainterLauncher(SoftwareLauncher):
 
         # Platform-specific plug-in paths
 
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             import ctypes.wintypes
-            CSIDL_PERSONAL = 5       # My Documents
-            SHGFP_TYPE_CURRENT = 0   # Get current My Documents folder, not default value
 
-            path_buffer= ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
-            ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, path_buffer)
+            CSIDL_PERSONAL = 5  # My Documents
+            SHGFP_TYPE_CURRENT = 0  # Get current My Documents folder, not default value
+
+            path_buffer = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
+            ctypes.windll.shell32.SHGetFolderPathW(
+                None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, path_buffer
+            )
 
             user_scripts_path = path_buffer.value + r"\Allegorithmic\Substance Painter\plugins"
 
         else:
-            user_scripts_path = (
-                os.path.expanduser(r"~/Documents/Allegorithmic/Substance Painter/plugins")
+            user_scripts_path = os.path.expanduser(
+                r"~/Documents/Allegorithmic/Substance Painter/plugins"
             )
 
         ensure_scripts_up_to_date(resources_plugins_path, user_scripts_path)
@@ -286,6 +321,75 @@ class SubstancePainterLauncher(SoftwareLauncher):
         engine_icon = os.path.join(self.disk_location, "icon_256.png")
         return engine_icon
 
+    def _is_supported(self, sw_version):
+        """
+        Inspects the supplied :class:`SoftwareVersion` object to see if it
+        aligns with this launcher's known product and version limitations. Will
+        check the :meth:`~minimum_supported_version` as well as the list of
+        product and version filters.
+        :param sw_version: :class:`SoftwareVersion` object to test against the
+            launcher's product and version limitations.
+        :returns: A tuple of the form: ``(bool, str)`` where the first item
+            is a boolean indicating whether the supplied :class:`SoftwareVersion` is
+            supported or not. The second argument is ``""`` if supported, but if
+            not supported will be a string representing the reason the support
+            check failed.
+        This helper method can be used by subclasses in the :meth:`scan_software`
+        method.
+
+        To check if the version is supported:
+        
+        First we make an exception for cases were we cannot retrieve the 
+        version number, we accept the software as valid.
+
+        Second, checks against the minimum supported version. If the
+        supplied version is greater it then checks to ensure that it is in the
+        launcher's ``versions`` constraint. If there are no constraints on the
+        versions, we will accept the software version.
+
+        :param str version: A string representing the version to check against.
+        :return: Boolean indicating if the supplied version string is supported.
+        """
+
+        # we support cases were we could not extract the version number
+        # from the binary/executable
+        if sw_version.version == UNKNOWN_VERSION:
+            return (True, "")
+
+        # convert to new version system if required
+        version = to_new_version_system(sw_version.version)
+
+        # second, compare against the minimum version
+        if self.minimum_supported_version:
+            min_version = to_new_version_system(self.minimum_supported_version)
+
+            if version < min_version:
+                # the version is older than the minimum supported version
+                return (
+                    False,
+                    "Executable '%s' didn't meet the version requirements, "
+                    "%s is older than the minimum supported %s"
+                    % (sw_version.path, sw_version.version, self.minimum_supported_version),
+                )
+
+        # third if the version is new enough, we check if we have any
+        # version restrictions
+        if not self.versions:
+            # No version restriction. All versions supported
+            return (True, "")
+
+        # if so, check versions list
+        supported = sw_version.version in self.versions
+        if not supported:
+            return (
+                False,
+                "Executable '%s' didn't meet the version requirements"
+                "(%s not in %s)" % (sw_version.path, sw_version.version, self.versions),
+            )
+
+        # passed all checks. must be supported!
+        return (True, "")
+
     def scan_software(self):
         """
         Scan the filesystem for substancepainter executables.
@@ -297,12 +401,12 @@ class SubstancePainterLauncher(SoftwareLauncher):
         supported_sw_versions = []
         for sw_version in self._find_software():
             (supported, reason) = self._is_supported(sw_version)
+
             if supported:
                 supported_sw_versions.append(sw_version)
             else:
                 self.logger.debug(
-                    "SoftwareVersion %s is not supported: %s"
-                    % (sw_version, reason)
+                    "SoftwareVersion %s is not supported: %s" % (sw_version, reason)
                 )
 
         return supported_sw_versions
@@ -332,18 +436,14 @@ class SubstancePainterLauncher(SoftwareLauncher):
                 # extract the matched keys form the key_dict (default to None
                 # if not included)
                 if sys.platform == "win32":
-                    executable_version = get_file_info(
-                        executable_path, "FileVersion"
-                    )
+                    executable_version = get_file_info(executable_path, "FileVersion")
                     # make sure we remove those pesky \x00 characters
                     executable_version = executable_version.strip("\x00")
                 else:
-                    executable_version = key_dict.get("version", "2018.0.0")
+                    executable_version = key_dict.get("version", UNKNOWN_VERSION)
 
                 self.logger.debug(
-                    "Software found: %s | %s.",
-                    executable_version,
-                    executable_template,
+                    "Software found: %s | %s.", executable_version, executable_template
                 )
                 sw_versions.append(
                     SoftwareVersion(
