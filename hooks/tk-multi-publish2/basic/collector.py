@@ -102,11 +102,17 @@ class SubstancePainterSessionCollector(HookBaseClass):
         item = self.collect_current_substancepainter_session(settings, parent_item)
 
         if item:
-            publish_as_folder_setting = settings.get("Publish Textures as Folder")
-            if publish_as_folder_setting and publish_as_folder_setting.value:
-                resource_items = self.collect_textures_as_folder(settings, item)
-            else:
-                resource_items = self.collect_textures(settings, item)
+
+            # TO FIX
+            # THIS DOES NOT SEEM TO WORK!
+            # publish_as_folder_setting = settings.get("Publish Textures as Folder")
+            # if publish_as_folder_setting and publish_as_folder_setting.value:
+            #     resource_items = self.collect_textures_as_folder(settings, item)
+            # else:
+            #     resource_items = self.collect_textures(settings, item)
+
+            # HARDCODE to publish textures as individual published files
+            resource_items = self.collect_textures(settings, item)
 
     def get_export_path(self, settings):
         publisher = self.parent
