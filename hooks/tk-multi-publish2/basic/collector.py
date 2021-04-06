@@ -74,7 +74,7 @@ class SubstancePainterSessionCollector(HookBaseClass):
             },
             "Publish Textures as Folder": {
                 "type": "bool",
-                "default": True,
+                "default": False,
                 "description": "Publish Substance Painter textures as a folder."
                 "If true (default) textures will be all exported"
                 " together as a folder publish."
