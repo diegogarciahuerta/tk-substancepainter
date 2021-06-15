@@ -286,6 +286,10 @@ class AppCommand(object):
             app = self.properties["app"]
             doc_url = app.documentation_url
             # deal with nuke's inability to handle unicode. #fail
+            import six
+            if six.PY3:
+                from pyreadline.py3k_compat import unicode
+
             if doc_url.__class__ == unicode:
                 doc_url = unicodedata.normalize("NFKD", doc_url).encode(
                     "ascii", "ignore"

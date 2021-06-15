@@ -18,6 +18,7 @@ import time
 import inspect
 import logging
 import traceback
+import six
 from functools import wraps
 from distutils.version import LooseVersion
 
@@ -48,7 +49,7 @@ def to_new_version_system(version):
     https://docs.substance3d.com/spdoc/version-2020-1-6-1-0-194216357.html
 
     The way we support this new version system is to use LooseVersion for
-    version comparisons. We modify the major version if the version is higher 
+    version comparisons. We modify the major version if the version is higher
     than 2017.1.0 for the version to become in the style of 6.1, by literally
     subtracting 2014 to the major version component.
     This leaves us always with a predictable version system:
@@ -62,9 +63,9 @@ def to_new_version_system(version):
     according to:
     https://docs.substance3d.com/spdoc/all-changes-188973073.html
 
-    Note that this change means that the LooseVersion is good for comparisons 
-    but NEVER for printing, it would simply print the same version as 
-    LooseVersion does not support rebuilding of the version string from it's 
+    Note that this change means that the LooseVersion is good for comparisons
+    but NEVER for printing, it would simply print the same version as
+    LooseVersion does not support rebuilding of the version string from it's
     components
     """
 
@@ -139,7 +140,7 @@ def refresh_engine(scene_name, prev_context):
         # and construct the new context for this path:
         tk = tank.tank_from_path(new_path)
         ctx = tk.context_from_path(new_path, prev_context)
-    except tank.TankError, e:
+    except tank.TankError as e:
         try:
             # could not detect context from path, will use the project context
             # for menus if it exists
@@ -154,7 +155,7 @@ def refresh_engine(scene_name, prev_context):
             )
             engine.show_warning(message)
 
-        except tank.TankError, e:
+        except tank.TankError as e:
             (exc_type, exc_value, exc_traceback) = sys.exc_info()
             message = ""
             message += "Shotgun Substance Painter Engine cannot be started:.\n"
@@ -336,7 +337,7 @@ class SubstancePainterEngine(Engine):
     @property
     def host_info(self):
         """
-        :returns: A dictionary with information about the application hosting 
+        :returns: A dictionary with information about the application hosting
                   his engine.
 
         The returned dictionary is of the following form on success:
@@ -585,8 +586,8 @@ class SubstancePainterEngine(Engine):
 
     def post_context_change(self, old_context, new_context):
         """
-        Runs after a context change. The Substance Painter event watching will 
-        be stopped and new callbacks registered containing the new context 
+        Runs after a context change. The Substance Painter event watching will
+        be stopped and new callbacks registered containing the new context
         information.
 
         :param old_context: The context being changed away from.
@@ -605,14 +606,19 @@ class SubstancePainterEngine(Engine):
 
     def _run_app_instance_commands(self):
         """
-        Runs the series of app instance commands listed in the 
+        Runs the series of app instance commands listed in the
         'run_at_startup' setting of the environment configuration yaml file.
         """
 
         # Build a dictionary mapping app instance names to dictionaries of
         # commands they registered with the engine.
         app_instance_commands = {}
-        for (cmd_name, value) in self.commands.iteritems():
+        if six.PY2:
+            command_iter = self.commands.iteritems()
+        else:
+            command_iter = self.commands.items()
+
+        for (cmd_name, value) in command_iter:
             app_instance = value["properties"].get("app")
             if app_instance:
                 # Add entry 'command name: command function' to the command
@@ -644,7 +650,12 @@ class SubstancePainterEngine(Engine):
             else:
                 if not setting_cmd_name:
                     # Run all commands of the given app instance.
-                    for (cmd_name, command_function) in cmd_dict.iteritems():
+                    if six.PY2:
+                        command_iter = cmd_dict.iteritems()
+                    else:
+                        command_iter = cmd_dict.items()
+
+                    for (cmd_name, command_function) in command_iter:
                         msg = (
                             "%s startup running app '%s' command '%s'.",
                             self.name,
@@ -756,7 +767,7 @@ class SubstancePainterEngine(Engine):
                 # the original dialog list.
                 self.logger.debug("Closing dialog %s.", dialog_window_title)
                 dialog.close()
-            except Exception, exception:
+            except Exception as exception:
                 traceback.print_exc()
                 self.logger.error(
                     "Cannot close dialog %s: %s", dialog_window_title, exception
