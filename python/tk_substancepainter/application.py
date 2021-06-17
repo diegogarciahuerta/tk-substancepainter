@@ -134,13 +134,13 @@ class Client(QtCore.QObject):
         message_id = jsonData.get("id")
 
         # requesting data
-        if jsonData.has_key("method"):
+        if "method" in jsonData:
             # self.log_debug("client: request detected: %s" % (message))
             method = jsonData.get("method")
             params = jsonData.get("params")
             self.engine.process_request(method, **params)
 
-        if jsonData.has_key("result"):
+        if "result" in jsonData:
             # self.log_debug("client: result detected: %s" % (message))
             if message_id in self.callbacks:
                 # self.log_debug(
@@ -212,6 +212,7 @@ class EngineClient(Client):
         return path
 
     def need_saving(self):
+        path = self.send_and_receive("GET_CURRENT_PROJECT_PATH")
         result = self.send_and_receive("NEEDS_SAVING", path=path)
         return result
 
@@ -333,11 +334,11 @@ class EngineClient(Client):
 
 if __name__ == "__main__":
     global client
-    app = QApplication(sys.argv)
+    app = QCoreApplication(sys.argv)
     client = Client(app)
-    version = get_application_version(client)
+    version = client.get_application_version()
     client.log_debug("application_version: %s" % version)
-    version2 = get_application_version(client)
+    version2 = client.get_application_version()
     client.log_debug("application_version2: %s" % version2)
 
     app.exec_()
