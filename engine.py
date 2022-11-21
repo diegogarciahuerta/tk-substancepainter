@@ -462,7 +462,7 @@ class SubstancePainterEngine(Engine):
             raise tank.TankError(msg)
 
         if painter_version > painter_min_supported_version:
-            # show a warning that this version of Substance Painter isn't yet fully tested
+            # log a warning that this version of Substance Painter isn't yet fully tested
             # with Shotgun:
             msg = (
                 "The Shotgun Pipeline Toolkit has not yet been fully "
@@ -471,26 +471,6 @@ class SubstancePainterEngine(Engine):
                 "bugs or instability."
                 "\n\n" % (painter_version)
             )
-
-            # determine if we should show the compatibility warning dialog:
-            show_warning_dlg = self.has_ui and SHOW_COMP_DLG not in os.environ
-
-            if show_warning_dlg:
-                # make sure we only show it once per session
-                os.environ[SHOW_COMP_DLG] = "1"
-
-                # check against the compatibility_dialog_min_version
-                # setting
-                min_version_str = self.get_setting("compatibility_dialog_min_version")
-
-                min_version = to_new_version_system(min_version_str)
-                if painter_version < min_version:
-                    show_warning_dlg = False
-
-            if show_warning_dlg:
-                # Note, title is padded to try to ensure dialog isn't insanely
-                # narrow!
-                self.show_warning(msg)
 
             # always log the warning to the script editor:
             self.logger.warning(msg)
