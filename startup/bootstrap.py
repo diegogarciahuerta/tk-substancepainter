@@ -65,7 +65,7 @@ def start_toolkit_classic():
     try:
         # Deserialize the environment context
         context = sgtk.context.deserialize(env_context)
-    except Exception, e:
+    except Exception as e:
         msg = (
             "Shotgun: Could not create context! Shotgun Pipeline Toolkit"
             " will be disabled. Details: %s" % e
@@ -83,7 +83,7 @@ def start_toolkit_classic():
         engine = sgtk.platform.start_engine(env_engine, context.sgtk, context)
         logger.debug("Current engine '%s'" % sgtk.platform.current_engine())
 
-    except Exception, e:
+    except Exception as e:
         msg = "Shotgun: Could not start engine. Details: %s" % e
         etype, value, tb = sys.exc_info()
         msg += "".join(traceback.format_exception(etype, value, tb))
@@ -100,7 +100,7 @@ def start_toolkit():
     # Verify sgtk can be loaded.
     try:
         import sgtk
-    except Exception, e:
+    except Exception as e:
         msg = "Shotgun: Could not import sgtk! Disabling for now: %s" % e
         print(msg)
         return

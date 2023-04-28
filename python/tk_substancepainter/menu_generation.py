@@ -286,7 +286,7 @@ class AppCommand(object):
             app = self.properties["app"]
             doc_url = app.documentation_url
             # deal with nuke's inability to handle unicode. #fail
-            if doc_url.__class__ == unicode:
+            if not isinstance(doc_url, str):
                 doc_url = unicodedata.normalize("NFKD", doc_url).encode(
                     "ascii", "ignore"
                 )

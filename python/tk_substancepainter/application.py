@@ -134,13 +134,13 @@ class Client(QtCore.QObject):
         message_id = jsonData.get("id")
 
         # requesting data
-        if jsonData.has_key("method"):
+        if "method" in jsonData:
             # self.log_debug("client: request detected: %s" % (message))
             method = jsonData.get("method")
             params = jsonData.get("params")
             self.engine.process_request(method, **params)
 
-        if jsonData.has_key("result"):
+        if "result" in jsonData:
             # self.log_debug("client: result detected: %s" % (message))
             if message_id in self.callbacks:
                 # self.log_debug(

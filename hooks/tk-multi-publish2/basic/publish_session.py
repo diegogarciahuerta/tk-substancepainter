@@ -361,7 +361,7 @@ def _session_path():
     # get the path to the current file
     path = engine.app.get_current_project_path()
 
-    if isinstance(path, unicode):
+    if not isinstance(path, str):
         path = path.encode("utf-8")
 
     return path
