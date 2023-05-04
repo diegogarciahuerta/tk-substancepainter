@@ -275,7 +275,7 @@ class SubstancePainterLauncher(SoftwareLauncher):
         # Only the startup script, the location of python and potentially the file to open
         # are needed.
         args = ""
-        args = ["%s=%s" % (k, v) for k, v in required_env.iteritems()]
+        args = ["%s=%s" % (k, v) for k, v in required_env.items()]
         args = '"&%s"' % "&".join(args)
         logger.info("running %s" % args)
 
