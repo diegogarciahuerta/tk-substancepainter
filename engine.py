@@ -139,7 +139,7 @@ def refresh_engine(scene_name, prev_context):
         # and construct the new context for this path:
         tk = tank.tank_from_path(new_path)
         ctx = tk.context_from_path(new_path, prev_context)
-    except tank.TankError, e:
+    except tank.TankError as e:
         try:
             # could not detect context from path, will use the project context
             # for menus if it exists
@@ -154,7 +154,7 @@ def refresh_engine(scene_name, prev_context):
             )
             engine.show_warning(message)
 
-        except tank.TankError, e:
+        except tank.TankError as e:
             (exc_type, exc_value, exc_traceback) = sys.exc_info()
             message = ""
             message += "Shotgun Substance Painter Engine cannot be started:.\n"
@@ -462,7 +462,7 @@ class SubstancePainterEngine(Engine):
             raise tank.TankError(msg)
 
         if painter_version > painter_min_supported_version:
-            # show a warning that this version of Substance Painter isn't yet fully tested
+            # log a warning that this version of Substance Painter isn't yet fully tested
             # with Shotgun:
             msg = (
                 "The Shotgun Pipeline Toolkit has not yet been fully "
@@ -471,26 +471,6 @@ class SubstancePainterEngine(Engine):
                 "bugs or instability."
                 "\n\n" % (painter_version)
             )
-
-            # determine if we should show the compatibility warning dialog:
-            show_warning_dlg = self.has_ui and SHOW_COMP_DLG not in os.environ
-
-            if show_warning_dlg:
-                # make sure we only show it once per session
-                os.environ[SHOW_COMP_DLG] = "1"
-
-                # check against the compatibility_dialog_min_version
-                # setting
-                min_version_str = self.get_setting("compatibility_dialog_min_version")
-
-                min_version = to_new_version_system(min_version_str)
-                if painter_version < min_version:
-                    show_warning_dlg = False
-
-            if show_warning_dlg:
-                # Note, title is padded to try to ensure dialog isn't insanely
-                # narrow!
-                self.show_warning(msg)
 
             # always log the warning to the script editor:
             self.logger.warning(msg)
@@ -612,7 +592,7 @@ class SubstancePainterEngine(Engine):
         # Build a dictionary mapping app instance names to dictionaries of
         # commands they registered with the engine.
         app_instance_commands = {}
-        for (cmd_name, value) in self.commands.iteritems():
+        for (cmd_name, value) in self.commands.items():
             app_instance = value["properties"].get("app")
             if app_instance:
                 # Add entry 'command name: command function' to the command
@@ -644,7 +624,7 @@ class SubstancePainterEngine(Engine):
             else:
                 if not setting_cmd_name:
                     # Run all commands of the given app instance.
-                    for (cmd_name, command_function) in cmd_dict.iteritems():
+                    for (cmd_name, command_function) in cmd_dict.items():
                         msg = (
                             "%s startup running app '%s' command '%s'.",
                             self.name,
@@ -756,7 +736,7 @@ class SubstancePainterEngine(Engine):
                 # the original dialog list.
                 self.logger.debug("Closing dialog %s.", dialog_window_title)
                 dialog.close()
-            except Exception, exception:
+            except Exception as exception:
                 traceback.print_exc()
                 self.logger.error(
                     "Cannot close dialog %s: %s", dialog_window_title, exception

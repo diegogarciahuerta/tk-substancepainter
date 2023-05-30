@@ -214,7 +214,7 @@ class SubstancePainterLauncher(SoftwareLauncher):
 
     EXECUTABLE_TEMPLATES = {
         "darwin": ["/Applications/Allegorithmic/Substance Painter.app"],
-        "win32": ["C:/Program Files/Allegorithmic/Substance Painter/Substance Painter.exe"],
+        "win32": ["C:/Program Files/Adobe/Adobe Substance 3D Painter/Adobe Substance 3D Painter.exe"],
         "linux2": [
             "/usr/Allegorithmic/Substance Painter",
             "/usr/Allegorithmic/Substance_Painter/Substance Painter",
@@ -275,7 +275,7 @@ class SubstancePainterLauncher(SoftwareLauncher):
         # Only the startup script, the location of python and potentially the file to open
         # are needed.
         args = ""
-        args = ["%s=%s" % (k, v) for k, v in required_env.iteritems()]
+        args = ["%s=%s" % (k, v) for k, v in required_env.items()]
         args = '"&%s"' % "&".join(args)
         logger.info("running %s" % args)
 
@@ -297,11 +297,11 @@ class SubstancePainterLauncher(SoftwareLauncher):
                 None, CSIDL_PERSONAL, None, SHGFP_TYPE_CURRENT, path_buffer
             )
 
-            user_scripts_path = path_buffer.value + r"\Allegorithmic\Substance Painter\plugins"
+            user_scripts_path = path_buffer.value + r"\Adobe\Adobe Substance 3D Painter\plugins"
 
         else:
             user_scripts_path = os.path.expanduser(
-                r"~/Documents/Allegorithmic/Substance Painter/plugins"
+                r"~/Documents/Adobe/Adobe Substance 3D Painter/plugins"
             )
 
         ensure_scripts_up_to_date(resources_plugins_path, user_scripts_path)

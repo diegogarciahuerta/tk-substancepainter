@@ -74,7 +74,7 @@ class SubstancePainterSessionCollector(HookBaseClass):
             },
             "Publish Textures as Folder": {
                 "type": "bool",
-                "default": True,
+                "default": False,
                 "description": "Publish Substance Painter textures as a folder."
                 "If true (default) textures will be all exported"
                 " together as a folder publish."
@@ -102,11 +102,17 @@ class SubstancePainterSessionCollector(HookBaseClass):
         item = self.collect_current_substancepainter_session(settings, parent_item)
 
         if item:
-            publish_as_folder_setting = settings.get("Publish Textures as Folder")
-            if publish_as_folder_setting and publish_as_folder_setting.value:
-                resource_items = self.collect_textures_as_folder(settings, item)
-            else:
-                resource_items = self.collect_textures(settings, item)
+
+            # TO FIX
+            # THIS DOES NOT SEEM TO WORK!
+            # publish_as_folder_setting = settings.get("Publish Textures as Folder")
+            # if publish_as_folder_setting and publish_as_folder_setting.value:
+            #     resource_items = self.collect_textures_as_folder(settings, item)
+            # else:
+            #     resource_items = self.collect_textures(settings, item)
+
+            # HARDCODE to publish textures as individual published files
+            resource_items = self.collect_textures(settings, item)
 
     def get_export_path(self, settings):
         publisher = self.parent
@@ -204,8 +210,8 @@ class SubstancePainterSessionCollector(HookBaseClass):
 
         icon_path = os.path.join(self.disk_location, os.pardir, "icons", "texture.png")
 
-        for texture_set_name, texture_set in map_export_info.iteritems():
-            for texture_id, texture_file in texture_set.iteritems():
+        for texture_set_name, texture_set in map_export_info.items():
+            for texture_id, texture_file in texture_set.items():
                 if os.path.exists(texture_file):
                     _, filenamefile = os.path.split(texture_file)
                     texture_name, _ = os.path.splitext(filenamefile)

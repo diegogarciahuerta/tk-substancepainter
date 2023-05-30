@@ -134,13 +134,13 @@ class Client(QtCore.QObject):
         message_id = jsonData.get("id")
 
         # requesting data
-        if jsonData.has_key("method"):
+        if "method" in jsonData:
             # self.log_debug("client: request detected: %s" % (message))
             method = jsonData.get("method")
             params = jsonData.get("params")
             self.engine.process_request(method, **params)
 
-        if jsonData.has_key("result"):
+        if "result" in jsonData:
             # self.log_debug("client: result detected: %s" % (message))
             if message_id in self.callbacks:
                 # self.log_debug(
@@ -270,7 +270,7 @@ class EngineClient(Client):
         result = self.send_and_receive("GET_MAP_EXPORT_INFORMATION")
         return result
 
-    def export_document_maps(self, destination):
+    def export_document_maps(self, preset, destination, format, mapInfo):
         # This is a trick to wait until the async process of
         # exporting textures finishes.
         self.__export_results = None
@@ -283,7 +283,11 @@ class EngineClient(Client):
         )
 
         self.log_debug("Starting map export...")
-        result = self.send_and_receive("EXPORT_DOCUMENT_MAPS", destination=destination)
+        self.send_and_receive("EXPORT_DOCUMENT_MAPS",
+                              preset=preset,
+                              destination=destination,
+                              format=format,
+                              mapInfo=mapInfo)
 
         while self.__export_results is None:
             self.log_debug("Waiting for maps to be exported ...")
